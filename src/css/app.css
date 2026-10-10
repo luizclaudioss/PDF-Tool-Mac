@@ -121,11 +121,82 @@ h1 {
   color: var(--ink);
 }
 
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 p.subtitle {
   color: var(--muted);
   font-size: 13px;
   margin: 0;
   line-height: 1.35;
+}
+
+/* Category Filter Bar */
+.category-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.category-pill:hover {
+  border-color: var(--border-hover);
+  color: var(--ink);
+}
+
+.category-pill.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+
+.category-pill .count {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: rgba(125, 125, 125, 0.15);
+  font-weight: 600;
+}
+
+.category-pill.active .count {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--bg);
 }
 
 /* Seletor de Tema macOS */
@@ -167,7 +238,7 @@ p.subtitle {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Grade de 10 Ferramentas (5 colunas x 2 linhas) */
+/* Grade de Ferramentas */
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -292,6 +363,93 @@ p.subtitle {
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 14px;
+}
+
+.workspace-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-switcher-dropdown {
+  position: relative;
+}
+
+.tool-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tool-switcher-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--card);
+}
+
+.tool-switcher-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  width: 240px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.tool-switcher-menu.hidden {
+  display: none;
+}
+
+.tool-switcher-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: var(--transition);
+}
+
+.tool-switcher-item:hover {
+  background: var(--card-hover);
+  color: var(--green);
+}
+
+.tool-switcher-item.active {
+  background: var(--green-light);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.tool-card.drag-active {
+  border-color: var(--green) !important;
+  background: var(--green-light) !important;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25), var(--shadow-md) !important;
 }
 
 .back-btn {
@@ -1986,6 +2144,286 @@ p.subtitle {
   border: 1px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
+/* ==========================================================================
+   v2.0 Novas Ferramentas: OCR, Redação/Tarja, Carimbos & Formulários
+   ========================================================================== */
+
+/* 1. OCR & Extração de Texto */
+.ocr-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 18px;
+  margin-top: 16px;
+  min-height: 420px;
+}
+
+@media (max-width: 800px) {
+  .ocr-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ocr-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.ocr-pages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.ocr-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.ocr-page-btn:hover {
+  border-color: var(--border-hover);
+}
+
+.ocr-page-btn.active {
+  border-color: var(--green);
+  background: var(--green-light);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.ocr-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ocr-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ocr-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ocr-text-area {
+  flex: 1;
+  width: 100%;
+  min-height: 340px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Monaco, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ocr-text-area:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+/* 2. Tarjar Dados Sensíveis (Redact) */
+.redact-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.redact-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.redact-canvas-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  user-select: none;
+}
+
+.redact-box-overlay {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px dashed #ffffff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: move;
+  box-sizing: border-box;
+}
+
+.redact-box-delete {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* 3. Carimbos & Textos (Annotate) */
+.annotate-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stamp-palette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.stamp-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 2px dashed;
+  background: transparent;
+  transition: var(--transition);
+}
+
+.stamp-badge-btn.approved {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+.stamp-badge-btn.rejected {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+.stamp-badge-btn.confidential {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+.stamp-badge-btn.paid {
+  border-color: #f97316;
+  color: #f97316;
+}
+.stamp-badge-btn.copy {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.stamp-badge-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.text-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* 4. Preenchimento de Formulários (Forms) */
+.forms-fields-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.form-field-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-field-type {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  background: var(--card);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
 
 
 

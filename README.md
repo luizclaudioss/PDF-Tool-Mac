@@ -10,10 +10,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-11.0%2B%20(Big%20Sur%20ou%20superior)-black?style=flat-square&logo=apple&logoColor=white" alt="macOS Version" />
-  <img src="https://img.shields.io/badge/Arquitetura-Universal%20(Apple%20Silicon%20%2B%20Intel)-blue?style=flat-square" alt="Universal Binary" />
-  <img src="https://img.shields.io/badge/Tamanho-~2.5%20MB-success?style=flat-square" alt="Tamanho" />
+  <img src="https://img.shields.io/badge/Arquitetura-Universal%20(Apple%20Silicon%20%2B%20Intel)-blue?style=flat-square" alt="Universal Binary" />  <img src="https://img.shields.io/badge/Tamanho-~2.8%20MB-success?style=flat-square" alt="Tamanho" />
   <img src="https://img.shields.io/badge/Privacidade-100%25%20Offline-green?style=flat-square" alt="Privacidade" />
-  <img src="https://img.shields.io/badge/Versão-1.2.1-orange?style=flat-square" alt="Versão" />
+  <img src="https://img.shields.io/badge/Versão-2.0.0-orange?style=flat-square" alt="Versão" />
 </p>
 
 ---
@@ -26,34 +25,41 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 * ⚡ **Ultra Leve e Rápido:** Binário Universal nativo ocupando menos de 3 MB.
 * 🔒 **Segurança Total:** Zero conexões externas, sem rastreamento e sem dependência de internet.
-* 🖥️ **Design Moderno:** Interface polida em grade de 10 utilitários (5×2 sem rolagem), ícones vetoriais modernos e integração nativa com o macOS.
+* 🖥️ **Design Moderno v2.0:** Interface com 14 utilitários categorizados (*Todas*, *Organizar*, *Segurança*, *Conteúdo*, *Converter*), suporte a arrastar e soltar direto nos cards e seletor rápido no topo.
 * 🌓 **Tema Flexível:** Suporte a Tema Claro, Escuro e Automático (sincronizado com o sistema operacional).
 * 📂 **Fluxo Sem Atrito:** Diálogo nativo *"Salvar Como..."* e atalho flutuante para abrir o arquivo ou visualizá-lo diretamente no Finder com um clique.
 
 ---
 
-## 🧰 Ferramentas Disponíveis (10 Utilitários)
+## 🧰 Ferramentas Disponíveis (14 Utilitários)
 
-| Ferramenta | Descrição |
-| :--- | :--- |
-| **Assinar PDF** | Assine documentos desenhando diretamente na tela com caligrafia suave ou importe uma foto/imagem da sua assinatura (com remoção inteligente de fundo branco). Posicione e redimensione interativamente sobre a página desejada. |
-| **Comprimir PDF** | Reduza o tamanho do PDF com 3 níveis de compressão (*Alta*, *Recomendada*, *Leve*), reamostragem inteligente de imagens e comparador de economia de tamanho em tempo real. |
-| **Proteger / Desproteger** | Criptografe documentos com senha via motor nativo de hardware Apple PDFKit, ou remova senhas permanentemente de arquivos desbloqueados. |
-| **Marca d'Água & Numeração** | Aplique marcas d'água personalizadas (*CONFIDENCIAL*, *COPIA*, etc.) com controle de cor, ângulo e opacidade, além de numeração de páginas nos cantos ou centro com preview ao vivo. |
-| **Combinar PDF** | Junte múltiplos PDFs em um só arquivo. Reordene arrastando cartões ou usando setas, com opção de rotação individual. |
-| **Extrair Páginas** | Selecione visualmente as páginas desejadas e crie um novo PDF apenas com elas. |
-| **Girar PDF** | Gire páginas individuais em 90°, 180° ou 270°, ou use os botões rápidos para girar todas de uma só vez. |
-| **Remover Páginas** | Marque páginas para exclusão com visualização instantânea em vermelho e botão de restauração. |
-| **PDF para JPG** | Converta páginas selecionadas em imagens JPG de alta qualidade (em lote ou arquivo único). |
-| **JPG para PDF** | Transforme fotos e imagens em um documento PDF, escolhendo a orientação das páginas (*Vertical* ou *Horizontal*). |
+| Ferramenta | Categoria | Descrição |
+| :--- | :---: | :--- |
+| **OCR & Extrair Texto** | Conteúdo | Reconheça e extraia textos de páginas escaneadas usando o motor nativo **Apple Vision Neural Engine** do macOS. Copie em um clique ou exporte para `.txt`. |
+| **Tarjar Dados Sensíveis** | Segurança | Oculte de forma permanente e definitiva dados confidenciais (CPF, nomes, valores bancários) desenhando tarjas pretas sobre o documento. |
+| **Carimbos & Textos** | Conteúdo | Aplique carimbos oficiais (*APROVADO*, *REJEITADO*, *CONFIDENCIAL*, *PAGO com data*, *CÓPIA*) e caixas de texto com caligrafia precisa e reposicionamento livre. |
+| **Preencher Formulário** | Conteúdo | Detecte e preencha campos interativos de formulários oficiais (*AcroForms*) com opção de congelar (*flatten*) as respostas para entrega segura. |
+| **Assinar PDF** | Segurança | Assine documentos desenhando diretamente na tela com caligrafia suave ou importe uma foto/imagem da sua assinatura (com remoção inteligente de fundo branco). |
+| **Comprimir PDF** | Converter | Reduza o tamanho do PDF com 3 níveis de compressão (*Alta*, *Recomendada*, *Leve*), reamostragem inteligente de imagens e comparador de economia de tamanho em tempo real. |
+| **Proteger / Desproteger** | Segurança | Criptografe documentos com senha via motor nativo de hardware Apple PDFKit, ou remova senhas permanentemente de arquivos desbloqueados. |
+| **Marca d'Água & Numeração** | Segurança | Aplique marcas d'água personalizadas (*CONFIDENCIAL*, *COPIA*, etc.) com controle de cor, ângulo e opacidade, além de numeração de páginas nos cantos ou centro. |
+| **Combinar PDF** | Organizar | Junte múltiplos PDFs em um só arquivo. Reordene arrastando cartões ou usando setas, com opção de rotação individual. |
+| **Extrair Páginas** | Organizar | Selecione visualmente as páginas desejadas e crie um novo PDF apenas com elas. |
+| **Girar PDF** | Organizar | Gire páginas individuais em 90°, 180° ou 270°, ou use os botões rápidos para girar todas de uma só vez. |
+| **Remover Páginas** | Organizar | Marque páginas para exclusão com visualização instantânea em vermelho e botão de restauração. |
+| **PDF para JPG** | Converter | Converta páginas selecionadas em imagens JPG de alta qualidade (em lote ou arquivo único). |
+| **JPG para PDF** | Converter | Transforme fotos e imagens em um documento PDF, escolhendo a orientação das páginas (*Vertical* ou *Horizontal*). |
 
 ---
 
 ## 💡 Destaques de Usabilidade
 
+* 🎯 **Arrastar & Soltar Global:** Arraste qualquer PDF do Finder direto sobre um cartão da tela inicial para abrir instantaneamente naquela ferramenta.
+* 🔀 **Seletor Rápido de Ferramentas:** Troque de ferramenta diretamente pela barra superior da área de trabalho sem precisar voltar à tela inicial.
+* 🧠 **Apple Vision OCR Offline:** Extração ultra rápida sem dependências externas, bibliotecas pesadas ou envio para servidores externos.
 * 🔍 **Quick Look (Espaço ou Duplo Clique):** Inspecione qualquer página em alta resolução antes de dividir, girar ou excluir documentos. Use as setas (← / →) para navegar e `Esc` ou `Espaço` para fechar.
 * ✍️ **Assinatura Vetorial & Transparente:** Desenhe sua assinatura com ajuste de espessura de traço e cor, ou faça upload de um papel assinado — o app elimina automaticamente o fundo branco.
-* 🔓 **Desbloqueio de PDFs Protegidos:** Caixa de diálogo embutida para inserir a senha de documentos criptografados (comprovantes bancários, faturas, etc.) sem sair do programa.
+* 🔓 **Desbloqueio de PDFs Protegidos:** Caixa de diálogo embutida para inserir a senha de documentos criptografados sem sair do programa.
 * 🛡️ **Criptografia Apple PDFKit:** Criptografe seus PDFs com algoritmos oficiais nativos do macOS, garantindo compatibilidade total com Adobe Acrobat e Visualizador do Mac.
 * 🚀 **Toast de Sucesso Inteligente:** Ao salvar, receba a confirmação com botões para **Abrir o Documento** ou **Revelar no Finder**, retornando à tela inicial automaticamente.
 * ⌨️ **Atalhos de Teclado Nativos:**
@@ -69,7 +75,7 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 ### Opção 1: Baixar o Aplicativo Pronto (Recomendado)
 1. Acesse a aba de **[Releases](https://github.com/luirdi/PDF-Tool-Mac/releases)**.
-2. Baixe o arquivo `PDF-Tool-v1.2.1.zip`.
+2. Baixe o arquivo `PDF-Tool-v2.0.0.zip`.
 3. Dê dois cliques para descompactar.
 4. Arraste o **PDF Tool.app** para a sua pasta **Aplicativos** (`/Applications`).
 

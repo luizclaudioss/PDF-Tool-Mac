@@ -26,86 +26,182 @@ const { PDFDocument, degrees } = PDFLib;
           close: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
           check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
           sign: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>`,
-          zoomIn: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`
+          zoomIn: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
+          redact: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="8" x2="16" y1="12" y2="12"/></svg>`,
+          ocr: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"/><path d="M20 7V4h-3"/><path d="M4 17v3h3"/><path d="M20 17v3h-3"/><line x1="9" x2="15" y1="9" y2="9"/><line x1="12" x2="12" y1="9" y2="15"/><line x1="9" x2="15" y1="15" y2="15"/></svg>`,
+          annotate: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4-14 14H4v-4L18 2z"/><path d="m14.5 5.5 4 4"/><circle cx="8" cy="18" r="2"/></svg>`,
+          forms: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/><path d="M9 7h6"/><path d="M9 17h6"/></svg>`
         };
 
         const TOOLS = [
           {
             id: "merge",
+            category: "organize",
             icon: SVG_ICONS.merge,
             title: "Combinar PDF",
             desc: "Combine vários PDFs em um único arquivo, na ordem que quiser.",
           },
           {
             id: "split",
+            category: "organize",
             icon: SVG_ICONS.split,
             title: "Extrair páginas",
             desc: "Selecione páginas específicas e extraia-as em um novo PDF.",
           },
           {
             id: "rotate",
+            category: "organize",
             icon: SVG_ICONS.rotate,
             title: "Girar PDF",
             desc: "Gire páginas do seu PDF 90°, 180° ou 270°.",
           },
           {
             id: "remove",
+            category: "organize",
             icon: SVG_ICONS.remove,
             title: "Remover páginas",
             desc: "Escolha quais páginas remover do PDF.",
           },
           {
             id: "compress",
+            category: "convert",
             icon: SVG_ICONS.compress,
             title: "Comprimir PDF",
             desc: "Reduza o tamanho do seu arquivo PDF mantendo boa qualidade visual.",
           },
           {
             id: "protect",
+            category: "security",
             icon: SVG_ICONS.protect,
             title: "Proteger / Desproteger",
             desc: "Adicione senha de abertura ao PDF ou remova a proteção existente.",
           },
           {
+            id: "redact",
+            category: "security",
+            icon: SVG_ICONS.redact,
+            title: "Tarjar Dados Sensíveis",
+            desc: "Oculte permanentemente dados confidenciais (CPF, nomes, valores) do PDF.",
+          },
+          {
             id: "watermark",
+            category: "security",
             icon: SVG_ICONS.watermark,
             title: "Marca d'Água e Numeração",
             desc: "Adicione carimbo com texto personalizado ou numere as páginas do seu PDF.",
           },
           {
             id: "sign",
+            category: "security",
             icon: SVG_ICONS.sign,
             title: "Assinar PDF",
             desc: "Desenhe sua assinatura ou importe imagem e posicione no documento.",
           },
           {
+            id: "ocr",
+            category: "content",
+            icon: SVG_ICONS.ocr,
+            title: "OCR & Extrair Texto",
+            desc: "Reconheça e extraia textos de PDFs escaneados com motor Apple Vision.",
+          },
+          {
+            id: "annotate",
+            category: "content",
+            icon: SVG_ICONS.annotate,
+            title: "Carimbos & Textos",
+            desc: "Aplique carimbos oficiais (Aprovado, Pago, Confidencial) e textos livres.",
+          },
+          {
+            id: "forms",
+            category: "content",
+            icon: SVG_ICONS.forms,
+            title: "Preencher Formulário",
+            desc: "Preencha formulários interativos (AcroForms) e congele as respostas.",
+          },
+          {
             id: "pdf2jpg",
+            category: "convert",
             icon: SVG_ICONS.pdf2jpg,
             title: "PDF para JPG",
             desc: "Converta cada página do PDF em uma imagem JPG.",
           },
           {
             id: "jpg2pdf",
+            category: "convert",
             icon: SVG_ICONS.jpg2pdf,
             title: "JPG para PDF",
             desc: "Converta uma ou mais imagens em um único PDF.",
           },
         ];
 
+        let currentCategory = "all";
+        let currentToolId = null;
+
         function renderHome() {
           document.body.classList.add("on-home");
           const grid = document.getElementById("tool-grid");
-          grid.innerHTML = TOOLS.map(
+          if (!grid) return;
+          const filtered = currentCategory === "all" ? TOOLS : TOOLS.filter((t) => t.category === currentCategory);
+
+          grid.innerHTML = filtered.map(
             (t) => `
-    <div class="tool-card" onclick="openTool('${t.id}')">
+    <div class="tool-card" id="card-${t.id}" data-id="${t.id}" onclick="openTool('${t.id}')">
       <div class="icon">${t.icon}</div>
       <h3>${t.title}</h3>
       <p>${t.desc}</p>
     </div>
   `,
           ).join("");
+
+          // Suporte completo a Drag & Drop direto nos cards
+          grid.querySelectorAll(".tool-card").forEach((card) => {
+            const toolId = card.dataset.id;
+            card.addEventListener("dragenter", (e) => {
+              e.preventDefault();
+              card.classList.add("drag-active");
+            });
+            card.addEventListener("dragover", (e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "copy";
+              card.classList.add("drag-active");
+            });
+            card.addEventListener("dragleave", (e) => {
+              e.preventDefault();
+              if (!card.contains(e.relatedTarget)) {
+                card.classList.remove("drag-active");
+              }
+            });
+            card.addEventListener("drop", (e) => {
+              e.preventDefault();
+              card.classList.remove("drag-active");
+              if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                openTool(toolId);
+                setTimeout(() => {
+                  if (window.currentDropzoneHandler) {
+                    window.currentDropzoneHandler([file]);
+                  }
+                }, 100);
+              }
+            });
+          });
         }
         renderHome();
+
+        // Configuração das abas/pills de categorias
+        function setupCategoryPills() {
+          const bar = document.getElementById("category-filter-bar");
+          if (!bar) return;
+          bar.querySelectorAll(".category-pill").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              bar.querySelectorAll(".category-pill").forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              currentCategory = btn.dataset.category || "all";
+              renderHome();
+            });
+          });
+        }
+        setupCategoryPills();
 
         function goHome() {
           if (currentPasswordPrompt) currentPasswordPrompt.cancel();
@@ -113,27 +209,68 @@ const { PDFDocument, degrees } = PDFLib;
           if (overlay) overlay.classList.add("hidden");
           currentActiveStatusEl = null;
           currentSaveBtn = null;
+          currentToolId = null;
           window.currentDropzoneHandler = null;
           document.body.classList.add("on-home");
-          document.getElementById("home-screen").style.display =
-            "block";
-          document
-            .getElementById("workspace")
-            .classList.remove("active");
+          document.getElementById("home-screen").style.display = "block";
+          document.getElementById("workspace").classList.remove("active");
           document.getElementById("workspace-content").innerHTML = "";
         }
 
         function openTool(id) {
+          currentToolId = id;
           document.body.classList.remove("on-home");
-          document.getElementById("home-screen").style.display =
-            "none";
+          document.getElementById("home-screen").style.display = "none";
           const ws = document.getElementById("workspace");
           ws.classList.add("active");
-          const content =
-            document.getElementById("workspace-content");
+
+          const toolObj = TOOLS.find((t) => t.id === id);
+          const labelEl = document.getElementById("current-tool-label");
+          if (labelEl && toolObj) {
+            labelEl.textContent = toolObj.title;
+          }
+
+          const content = document.getElementById("workspace-content");
           content.innerHTML = "";
-          RENDERERS[id](content);
+          if (RENDERERS[id]) {
+            RENDERERS[id](content);
+          }
         }
+
+        window.toggleToolSwitcher = function (event) {
+          if (event) event.stopPropagation();
+          const menu = document.getElementById("tool-switcher-menu");
+          if (!menu) return;
+          if (menu.classList.contains("hidden")) {
+            menu.innerHTML = TOOLS.map(
+              (t) => `
+              <button type="button" class="tool-switcher-item ${t.id === currentToolId ? "active" : ""}" onclick="switchTool('${t.id}')">
+                <span style="display:inline-flex;align-items:center;width:16px;height:16px;">${t.icon}</span>
+                <span>${t.title}</span>
+              </button>
+            `,
+            ).join("");
+            menu.classList.remove("hidden");
+          } else {
+            menu.classList.add("hidden");
+          }
+        };
+
+        window.switchTool = function (id) {
+          const menu = document.getElementById("tool-switcher-menu");
+          if (menu) menu.classList.add("hidden");
+          if (id === currentToolId) return;
+          openTool(id);
+        };
+
+        document.addEventListener("click", (e) => {
+          const menu = document.getElementById("tool-switcher-menu");
+          if (menu && !menu.classList.contains("hidden")) {
+            if (!e.target.closest("#tool-switcher-dropdown")) {
+              menu.classList.add("hidden");
+            }
+          }
+        });
 
         function hexToRgb(hex) {
           let c = (hex || "#dc2626").replace("#", "").trim();
@@ -282,6 +419,80 @@ const { PDFDocument, degrees } = PDFLib;
             cb.reject(new Error(error || "Senha incorreta."));
           }
         };
+
+        // ---------- OCR e Reconhecimento de Texto com Apple Vision e Fallback ----------
+        const ocrCallbacks = {};
+        let ocrCallbackIdCounter = 0;
+
+        function nativeOcrPdf(buffer) {
+          return new Promise(async (resolve, reject) => {
+            if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.nativeOcr) {
+              try {
+                const textResult = await extractPdfTextFallback(buffer);
+                resolve(textResult);
+              } catch (err) {
+                reject(new Error("OCR nativo indisponível nesta plataforma: " + err.message));
+              }
+              return;
+            }
+            const callbackId = "ocr_" + (++ocrCallbackIdCounter);
+            ocrCallbacks[callbackId] = { resolve, reject, buffer };
+
+            try {
+              const base64 = await blobToBase64(new Blob([buffer], { type: "application/pdf" }));
+              window.webkit.messageHandlers.nativeOcr.postMessage({
+                data: base64,
+                callbackId: callbackId
+              });
+            } catch (e) {
+              delete ocrCallbacks[callbackId];
+              reject(e);
+            }
+          });
+        }
+
+        window.onNativeOcrResult = function(callbackId, success, dataBase64, error) {
+          const cb = ocrCallbacks[callbackId];
+          if (!cb) return;
+          delete ocrCallbacks[callbackId];
+
+          if (success && dataBase64) {
+            try {
+              const binary = atob(dataBase64);
+              const bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+              const jsonStr = new TextDecoder().decode(bytes);
+              const parsed = JSON.parse(jsonStr);
+              cb.resolve(parsed);
+            } catch (e) {
+              cb.reject(new Error("Falha ao decodificar resultado do OCR."));
+            }
+          } else {
+            // Em caso de erro, tenta fallback
+            if (cb.buffer) {
+              extractPdfTextFallback(cb.buffer).then(cb.resolve).catch(cb.reject);
+            } else {
+              cb.reject(new Error(error || "Erro no processo de OCR."));
+            }
+          }
+        };
+
+        async function extractPdfTextFallback(buffer) {
+          const doc = await pdfjsLib.getDocument({ data: buffer.slice(0) }).promise;
+          const results = [];
+          for (let i = 1; i <= doc.numPages; i++) {
+            const page = await doc.getPage(i);
+            const content = await page.getTextContent();
+            const lines = content.items.map(item => item.str).filter(Boolean);
+            results.push({
+              page: i,
+              text: lines.join(" ")
+            });
+          }
+          return results;
+        }
 
         let currentPasswordPrompt = null;
 
@@ -3417,6 +3628,894 @@ const { PDFDocument, degrees } = PDFLib;
           container.appendChild(mainLayout);
           container.appendChild(btn);
           container.appendChild(status);
+        };
+
+        // =====================================================================
+        // v2.0 RENDERERS: OCR, REDACT, ANNOTATE, FORMS
+        // =====================================================================
+
+        // ---------- 1. OCR & Extrair Texto ----------
+        RENDERERS.ocr = function (container) {
+          const top = document.createElement("div");
+          top.className = "workspace-tool-header";
+          top.innerHTML = `
+            <h2>${SVG_ICONS.ocr} OCR & Extrair Texto</h2>
+            <p class="subtitle">Reconheça e extraia textos de páginas escaneadas usando o motor nativo Apple Vision.</p>
+          `;
+          container.appendChild(top);
+
+          let currentFile = null;
+          let ocrPagesData = [];
+          let selectedPageIndex = 0;
+
+          const dropWrap = document.createElement("div");
+          container.appendChild(dropWrap);
+
+          const mainWrap = document.createElement("div");
+          mainWrap.className = "hidden";
+          container.appendChild(mainWrap);
+
+          const status = document.createElement("div");
+          status.className = "status";
+          container.appendChild(status);
+
+          makeDropzone(dropWrap, { label: "um PDF para extrair texto" }, async (files) => {
+            if (!files || !files.length) return;
+            const file = files[0];
+            setStatus(status, "Carregando documento...", "");
+            const unlocked = await ensurePdfFileUnlocked(file, status);
+            if (!unlocked) return;
+
+            currentFile = unlocked.file;
+            dropWrap.classList.add("hidden");
+            mainWrap.classList.remove("hidden");
+            setStatus(status, "Executando OCR com Apple Vision Neural Engine...", "");
+
+            try {
+              const results = await nativeOcrPdf(unlocked.buffer);
+              ocrPagesData = results || [];
+              setStatus(status, "");
+              renderOcrUI();
+            } catch (err) {
+              console.error(err);
+              setStatus(status, "Erro no OCR: " + err.message, "error");
+            }
+          });
+
+          function renderOcrUI() {
+            mainWrap.innerHTML = "";
+            const layout = document.createElement("div");
+            layout.className = "ocr-layout";
+
+            const leftCol = document.createElement("div");
+            leftCol.className = "ocr-left-col";
+
+            const leftTitle = document.createElement("div");
+            leftTitle.style.cssText = "font-size:12px;font-weight:600;color:var(--ink);display:flex;justify-content:space-between;align-items:center;";
+            leftTitle.innerHTML = `<span>Páginas (${ocrPagesData.length})</span>`;
+            leftCol.appendChild(leftTitle);
+
+            const pagesList = document.createElement("div");
+            pagesList.className = "ocr-pages-list";
+
+            ocrPagesData.forEach((pg, idx) => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = `ocr-page-btn ${idx === selectedPageIndex ? "active" : ""}`;
+              const wordCount = (pg.text || "").trim().split(/\s+/).filter(Boolean).length;
+              btn.innerHTML = `<span>Página ${pg.page}</span><span style="font-size:10px;opacity:0.7;">${wordCount} palavras</span>`;
+              btn.onclick = () => {
+                selectedPageIndex = idx;
+                renderOcrUI();
+              };
+              pagesList.appendChild(btn);
+            });
+            leftCol.appendChild(pagesList);
+
+            const allPagesBtn = document.createElement("button");
+            allPagesBtn.type = "button";
+            allPagesBtn.className = `ocr-page-btn ${selectedPageIndex === -1 ? "active" : ""}`;
+            allPagesBtn.innerHTML = `<span>📄 Todas as Páginas</span><span style="font-size:10px;opacity:0.7;">Completo</span>`;
+            allPagesBtn.onclick = () => {
+              selectedPageIndex = -1;
+              renderOcrUI();
+            };
+            leftCol.appendChild(allPagesBtn);
+
+            layout.appendChild(leftCol);
+
+            const rightCol = document.createElement("div");
+            rightCol.className = "ocr-right-col";
+
+            const currentText = selectedPageIndex === -1 
+              ? ocrPagesData.map(p => `--- Página ${p.page} ---\n${p.text}`).join("\n\n")
+              : (ocrPagesData[selectedPageIndex]?.text || "");
+
+            const toolbar = document.createElement("div");
+            toolbar.className = "ocr-toolbar";
+
+            const statsSpan = document.createElement("span");
+            statsSpan.style.cssText = "font-size:12px;color:var(--muted);";
+            const words = currentText.trim().split(/\s+/).filter(Boolean).length;
+            statsSpan.textContent = `${words} palavras • ${currentText.length} caracteres`;
+            toolbar.appendChild(statsSpan);
+
+            const actions = document.createElement("div");
+            actions.className = "ocr-toolbar-actions";
+
+            const copyBtn = document.createElement("button");
+            copyBtn.type = "button";
+            copyBtn.className = "btn-secondary";
+            copyBtn.innerHTML = `<span>Copiar Texto</span>`;
+            copyBtn.onclick = async () => {
+              await navigator.clipboard.writeText(textArea.value);
+              copyBtn.innerHTML = `<span>✓ Copiado!</span>`;
+              setTimeout(() => copyBtn.innerHTML = `<span>Copiar Texto</span>`, 1800);
+            };
+            actions.appendChild(copyBtn);
+
+            const downloadTxtBtn = document.createElement("button");
+            downloadTxtBtn.type = "button";
+            downloadTxtBtn.className = "action-btn";
+            downloadTxtBtn.innerHTML = `<span>Salvar .TXT</span>`;
+            downloadTxtBtn.onclick = () => {
+              prepareSaveAction(status, downloadTxtBtn);
+              const blob = new Blob([textArea.value], { type: "text/plain;charset=utf-8" });
+              const baseName = getBaseFilename(currentFile ? currentFile.name : "ocr_texto");
+              triggerDownload(blob, `${baseName}_ocr.txt`);
+            };
+            actions.appendChild(downloadTxtBtn);
+
+            toolbar.appendChild(actions);
+            rightCol.appendChild(toolbar);
+
+            const textArea = document.createElement("textarea");
+            textArea.className = "ocr-text-area";
+            textArea.value = currentText;
+            rightCol.appendChild(textArea);
+
+            layout.appendChild(rightCol);
+            mainWrap.appendChild(layout);
+          }
+        };
+
+        // ---------- 2. Tarjar Dados Sensíveis (Redact) ----------
+        RENDERERS.redact = function (container) {
+          const top = document.createElement("div");
+          top.className = "workspace-tool-header";
+          top.innerHTML = `
+            <h2>${SVG_ICONS.redact} Tarjar Dados Sensíveis</h2>
+            <p class="subtitle">Selecione áreas na página para aplicar tarjas pretas permanentes antes de compartilhar o documento.</p>
+          `;
+          container.appendChild(top);
+
+          let currentFile = null;
+          let pdfBuffer = null;
+          let pdfDoc = null;
+          let totalPages = 1;
+          let currentPage = 1;
+          const redactBoxesPerPage = {};
+
+          const dropWrap = document.createElement("div");
+          container.appendChild(dropWrap);
+
+          const mainWrap = document.createElement("div");
+          mainWrap.className = "hidden redact-container";
+          container.appendChild(mainWrap);
+
+          const status = document.createElement("div");
+          status.className = "status";
+          container.appendChild(status);
+
+          makeDropzone(dropWrap, { label: "um PDF para tarjar informações" }, async (files) => {
+            if (!files || !files.length) return;
+            const file = files[0];
+            setStatus(status, "Carregando PDF...", "");
+            const unlocked = await ensurePdfFileUnlocked(file, status);
+            if (!unlocked) return;
+
+            currentFile = unlocked.file;
+            pdfBuffer = unlocked.buffer;
+            const doc = await pdfjsLib.getDocument({ data: pdfBuffer.slice(0) }).promise;
+            pdfDoc = doc;
+            totalPages = doc.numPages;
+            currentPage = 1;
+
+            dropWrap.classList.add("hidden");
+            mainWrap.classList.remove("hidden");
+            setStatus(status, "");
+            renderPageUI();
+          });
+
+          async function renderPageUI() {
+            mainWrap.innerHTML = "";
+
+            const toolbar = document.createElement("div");
+            toolbar.className = "redact-toolbar";
+
+            const navWrap = document.createElement("div");
+            navWrap.style.cssText = "display:flex;align-items:center;gap:8px;";
+            navWrap.innerHTML = `
+              <button type="button" class="btn-secondary" id="redact-prev" ${currentPage <= 1 ? "disabled" : ""}>← Anterior</button>
+              <span style="font-size:12px;font-weight:600;color:var(--ink);">Página ${currentPage} de ${totalPages}</span>
+              <button type="button" class="btn-secondary" id="redact-next" ${currentPage >= totalPages ? "disabled" : ""}>Próxima →</button>
+            `;
+            toolbar.appendChild(navWrap);
+
+            const countBoxes = (redactBoxesPerPage[currentPage] || []).length;
+            const totalAllBoxes = Object.values(redactBoxesPerPage).reduce((acc, arr) => acc + arr.length, 0);
+
+            const infoSpan = document.createElement("span");
+            infoSpan.style.cssText = "font-size:12px;color:var(--muted);";
+            infoSpan.textContent = `Arraste o mouse sobre a página para desenhar tarjas (${countBoxes} nesta página, ${totalAllBoxes} no total)`;
+            toolbar.appendChild(infoSpan);
+
+            const actionBtns = document.createElement("div");
+            actionBtns.style.cssText = "display:flex;gap:8px;align-items:center;";
+
+            if (countBoxes > 0) {
+              const clearBtn = document.createElement("button");
+              clearBtn.type = "button";
+              clearBtn.className = "btn-secondary";
+              clearBtn.textContent = "Limpar página";
+              clearBtn.onclick = () => {
+                redactBoxesPerPage[currentPage] = [];
+                renderPageUI();
+              };
+              actionBtns.appendChild(clearBtn);
+            }
+
+            const saveBtn = document.createElement("button");
+            saveBtn.type = "button";
+            saveBtn.className = "action-btn";
+            saveBtn.textContent = "Aplicar Tarjas e Salvar";
+            saveBtn.onclick = saveRedactedPdf;
+            actionBtns.appendChild(saveBtn);
+
+            toolbar.appendChild(actionBtns);
+            mainWrap.appendChild(toolbar);
+
+            navWrap.querySelector("#redact-prev").onclick = () => {
+              if (currentPage > 1) { currentPage--; renderPageUI(); }
+            };
+            navWrap.querySelector("#redact-next").onclick = () => {
+              if (currentPage < totalPages) { currentPage++; renderPageUI(); }
+            };
+
+            const page = await pdfDoc.getPage(currentPage);
+            const viewport = page.getViewport({ scale: 1.2 });
+
+            const canvasWrapper = document.createElement("div");
+            canvasWrapper.className = "redact-canvas-wrapper";
+            canvasWrapper.style.width = viewport.width + "px";
+            canvasWrapper.style.height = viewport.height + "px";
+
+            const canvas = document.createElement("canvas");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext("2d");
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            canvasWrapper.appendChild(canvas);
+
+            const overlay = document.createElement("div");
+            overlay.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;";
+            canvasWrapper.appendChild(overlay);
+
+            const currentBoxes = redactBoxesPerPage[currentPage] || [];
+            currentBoxes.forEach((box, bIdx) => {
+              const bEl = document.createElement("div");
+              bEl.className = "redact-box-overlay";
+              bEl.style.left = (box.xPct * 100) + "%";
+              bEl.style.top = (box.yPct * 100) + "%";
+              bEl.style.width = (box.wPct * 100) + "%";
+              bEl.style.height = (box.hPct * 100) + "%";
+              bEl.textContent = "CONFIDENCIAL";
+
+              const delBtn = document.createElement("button");
+              delBtn.type = "button";
+              delBtn.className = "redact-box-delete";
+              delBtn.innerHTML = SVG_ICONS.close;
+              delBtn.onclick = (e) => {
+                e.stopPropagation();
+                currentBoxes.splice(bIdx, 1);
+                renderPageUI();
+              };
+              bEl.appendChild(delBtn);
+              canvasWrapper.appendChild(bEl);
+            });
+
+            let isDrawing = false;
+            let startX = 0, startY = 0;
+            let tempBox = null;
+
+            overlay.onmousedown = (e) => {
+              const rect = canvasWrapper.getBoundingClientRect();
+              startX = e.clientX - rect.left;
+              startY = e.clientY - rect.top;
+              isDrawing = true;
+
+              tempBox = document.createElement("div");
+              tempBox.className = "redact-box-overlay";
+              tempBox.style.left = startX + "px";
+              tempBox.style.top = startY + "px";
+              tempBox.style.width = "0px";
+              tempBox.style.height = "0px";
+              canvasWrapper.appendChild(tempBox);
+            };
+
+            window.onmousemove = (e) => {
+              if (!isDrawing || !tempBox) return;
+              const rect = canvasWrapper.getBoundingClientRect();
+              const curX = Math.max(0, Math.min(e.clientX - rect.left, viewport.width));
+              const curY = Math.max(0, Math.min(e.clientY - rect.top, viewport.height));
+
+              const left = Math.min(startX, curX);
+              const top = Math.min(startY, curY);
+              const w = Math.abs(curX - startX);
+              const h = Math.abs(curY - startY);
+
+              tempBox.style.left = left + "px";
+              tempBox.style.top = top + "px";
+              tempBox.style.width = w + "px";
+              tempBox.style.height = h + "px";
+            };
+
+            window.onmouseup = (e) => {
+              if (!isDrawing) return;
+              isDrawing = false;
+              if (!tempBox) return;
+
+              const rect = canvasWrapper.getBoundingClientRect();
+              const curX = Math.max(0, Math.min(e.clientX - rect.left, viewport.width));
+              const curY = Math.max(0, Math.min(e.clientY - rect.top, viewport.height));
+
+              const left = Math.min(startX, curX);
+              const top = Math.min(startY, curY);
+              const w = Math.abs(curX - startX);
+              const h = Math.abs(curY - startY);
+
+              if (tempBox.parentNode) tempBox.parentNode.removeChild(tempBox);
+              tempBox = null;
+
+              if (w > 10 && h > 10) {
+                if (!redactBoxesPerPage[currentPage]) redactBoxesPerPage[currentPage] = [];
+                redactBoxesPerPage[currentPage].push({
+                  xPct: left / viewport.width,
+                  yPct: top / viewport.height,
+                  wPct: w / viewport.width,
+                  hPct: h / viewport.height
+                });
+                renderPageUI();
+              }
+            };
+
+            mainWrap.appendChild(canvasWrapper);
+          }
+
+          async function saveRedactedPdf() {
+            setStatus(status, "Gerando PDF com tarjas definitivas...", "");
+            try {
+              const { PDFDocument, rgb } = PDFLib;
+              const pdf = await PDFDocument.load(pdfBuffer.slice(0));
+              const pages = pdf.getPages();
+
+              for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+                const pageNum = pIdx + 1;
+                const boxes = redactBoxesPerPage[pageNum];
+                if (!boxes || !boxes.length) continue;
+
+                const p = pages[pIdx];
+                const { width, height } = p.getSize();
+
+                for (const b of boxes) {
+                  const pdfX = b.xPct * width;
+                  const pdfW = b.wPct * width;
+                  const pdfH = b.hPct * height;
+                  const pdfY = height - (b.yPct * height) - pdfH;
+
+                  p.drawRectangle({
+                    x: pdfX,
+                    y: pdfY,
+                    width: pdfW,
+                    height: pdfH,
+                    color: rgb(0, 0, 0)
+                  });
+                }
+              }
+
+              const outBytes = await pdf.save();
+              const baseName = getBaseFilename(currentFile ? currentFile.name : "documento");
+              prepareSaveAction(status, null);
+              const blob = new Blob([outBytes], { type: "application/pdf" });
+              triggerDownload(blob, `${baseName}_tarjado.pdf`);
+              setStatus(status, "");
+            } catch (err) {
+              console.error(err);
+              setStatus(status, "Erro ao gerar PDF tarjado: " + err.message, "error");
+            }
+          }
+        };
+
+        // ---------- 3. Carimbos & Textos (Annotate) ----------
+        RENDERERS.annotate = function (container) {
+          const top = document.createElement("div");
+          top.className = "workspace-tool-header";
+          top.innerHTML = `
+            <h2>${SVG_ICONS.annotate} Carimbos & Textos</h2>
+            <p class="subtitle">Aplique carimbos oficiais rápidos e caixas de texto com caligrafia clara e precisa no documento.</p>
+          `;
+          container.appendChild(top);
+
+          let currentFile = null;
+          let pdfBuffer = null;
+          let pdfDoc = null;
+          let totalPages = 1;
+          let currentPage = 1;
+          // Items por página: { id, type: 'stamp'|'text', text, colorHex, xPct, yPct, size }
+          const annotationsPerPage = {};
+
+          const dropWrap = document.createElement("div");
+          container.appendChild(dropWrap);
+
+          const mainWrap = document.createElement("div");
+          mainWrap.className = "hidden annotate-container";
+          container.appendChild(mainWrap);
+
+          const status = document.createElement("div");
+          status.className = "status";
+          container.appendChild(status);
+
+          makeDropzone(dropWrap, { label: "um PDF para carimbar ou anotar" }, async (files) => {
+            if (!files || !files.length) return;
+            const file = files[0];
+            setStatus(status, "Carregando PDF...", "");
+            const unlocked = await ensurePdfFileUnlocked(file, status);
+            if (!unlocked) return;
+
+            currentFile = unlocked.file;
+            pdfBuffer = unlocked.buffer;
+            const doc = await pdfjsLib.getDocument({ data: pdfBuffer.slice(0) }).promise;
+            pdfDoc = doc;
+            totalPages = doc.numPages;
+            currentPage = 1;
+
+            dropWrap.classList.add("hidden");
+            mainWrap.classList.remove("hidden");
+            setStatus(status, "");
+            renderAnnotateUI();
+          });
+
+          async function renderAnnotateUI() {
+            mainWrap.innerHTML = "";
+
+            // Paleta de Carimbos
+            const palette = document.createElement("div");
+            palette.className = "stamp-palette";
+            palette.innerHTML = `<span style="font-size:12px;font-weight:600;color:var(--ink);">Carimbos Rápidos:</span>`;
+
+            const STAMPS = [
+              { label: "APROVADO", cls: "approved", hex: "#22c55e" },
+              { label: "REJEITADO", cls: "rejected", hex: "#ef4444" },
+              { label: "CONFIDENCIAL", cls: "confidential", hex: "#8b5cf6" },
+              { label: "PAGO", cls: "paid", hex: "#f97316", suffixDate: true },
+              { label: "CÓPIA", cls: "copy", hex: "#3b82f6" },
+            ];
+
+            STAMPS.forEach((st) => {
+              const sBtn = document.createElement("button");
+              sBtn.type = "button";
+              sBtn.className = `stamp-badge-btn ${st.cls}`;
+              sBtn.textContent = st.label;
+              sBtn.onclick = () => {
+                let txt = st.label;
+                if (st.suffixDate) {
+                  const today = new Date().toLocaleDateString("pt-BR");
+                  txt += ` (${today})`;
+                }
+                addAnnotation({
+                  type: "stamp",
+                  text: txt,
+                  colorHex: st.hex,
+                  xPct: 0.35,
+                  yPct: 0.4
+                });
+              };
+              palette.appendChild(sBtn);
+            });
+            mainWrap.appendChild(palette);
+
+            // Barra de Inserir Texto Livre
+            const textBar = document.createElement("div");
+            textBar.className = "text-add-bar";
+            textBar.innerHTML = `
+              <input type="text" id="ann-text-input" placeholder="Digite seu texto..." style="flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--ink);" />
+              <select id="ann-color-select" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--ink);">
+                <option value="#0f172a">Preto</option>
+                <option value="#2563eb">Azul</option>
+                <option value="#dc2626">Vermelho</option>
+                <option value="#16a34a">Verde</option>
+              </select>
+              <button type="button" class="btn-secondary" id="ann-add-btn">+ Inserir Texto</button>
+            `;
+            mainWrap.appendChild(textBar);
+
+            textBar.querySelector("#ann-add-btn").onclick = () => {
+              const input = textBar.querySelector("#ann-text-input");
+              const textVal = input.value.trim();
+              if (!textVal) return;
+              const col = textBar.querySelector("#ann-color-select").value;
+              addAnnotation({
+                type: "text",
+                text: textVal,
+                colorHex: col,
+                xPct: 0.3,
+                yPct: 0.3
+              });
+              input.value = "";
+            };
+
+            // Navegação e Ações
+            const navBar = document.createElement("div");
+            navBar.className = "redact-toolbar";
+
+            const navWrap = document.createElement("div");
+            navWrap.style.cssText = "display:flex;align-items:center;gap:8px;";
+            navWrap.innerHTML = `
+              <button type="button" class="btn-secondary" id="ann-prev" ${currentPage <= 1 ? "disabled" : ""}>← Anterior</button>
+              <span style="font-size:12px;font-weight:600;color:var(--ink);">Página ${currentPage} de ${totalPages}</span>
+              <button type="button" class="btn-secondary" id="ann-next" ${currentPage >= totalPages ? "disabled" : ""}>Próxima →</button>
+            `;
+            navBar.appendChild(navWrap);
+
+            const saveBtn = document.createElement("button");
+            saveBtn.type = "button";
+            saveBtn.className = "action-btn";
+            saveBtn.textContent = "Aplicar e Salvar PDF";
+            saveBtn.onclick = saveAnnotatedPdf;
+            navBar.appendChild(saveBtn);
+            mainWrap.appendChild(navBar);
+
+            navWrap.querySelector("#ann-prev").onclick = () => {
+              if (currentPage > 1) { currentPage--; renderAnnotateUI(); }
+            };
+            navWrap.querySelector("#ann-next").onclick = () => {
+              if (currentPage < totalPages) { currentPage++; renderAnnotateUI(); }
+            };
+
+            // Canvas de Renderização
+            const page = await pdfDoc.getPage(currentPage);
+            const viewport = page.getViewport({ scale: 1.2 });
+
+            const canvasWrapper = document.createElement("div");
+            canvasWrapper.className = "redact-canvas-wrapper";
+            canvasWrapper.style.width = viewport.width + "px";
+            canvasWrapper.style.height = viewport.height + "px";
+
+            const canvas = document.createElement("canvas");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext("2d");
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            canvasWrapper.appendChild(canvas);
+
+            // Renderizar itens desta página
+            const items = annotationsPerPage[currentPage] || [];
+            items.forEach((item, itIdx) => {
+              const el = document.createElement("div");
+              el.style.cssText = `
+                position: absolute;
+                left: ${item.xPct * 100}%;
+                top: ${item.yPct * 100}%;
+                cursor: move;
+                user-select: none;
+                z-index: 10;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: ${item.type === "stamp" ? "6px 14px" : "4px 8px"};
+                border-radius: ${item.type === "stamp" ? "6px" : "4px"};
+                font-size: ${item.type === "stamp" ? "14px" : "13px"};
+                font-weight: 700;
+                letter-spacing: ${item.type === "stamp" ? "0.06em" : "normal"};
+                color: ${item.colorHex};
+                border: ${item.type === "stamp" ? `2.5px dashed ${item.colorHex}` : `1px dashed ${item.colorHex}`};
+                background: rgba(255, 255, 255, 0.88);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+              `;
+              el.textContent = item.text;
+
+              const delBtn = document.createElement("button");
+              delBtn.type = "button";
+              delBtn.className = "redact-box-delete";
+              delBtn.innerHTML = SVG_ICONS.close;
+              delBtn.onclick = (e) => {
+                e.stopPropagation();
+                items.splice(itIdx, 1);
+                renderAnnotateUI();
+              };
+              el.appendChild(delBtn);
+
+              // Arrastar elemento
+              let isDraggingEl = false;
+              let dragOffsetX = 0, dragOffsetY = 0;
+
+              el.onmousedown = (e) => {
+                if (e.target.closest("button")) return;
+                e.stopPropagation();
+                isDraggingEl = true;
+                const rect = el.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+              };
+
+              window.addEventListener("mousemove", (e) => {
+                if (!isDraggingEl) return;
+                const cRect = canvasWrapper.getBoundingClientRect();
+                const newLeft = e.clientX - cRect.left - dragOffsetX;
+                const newTop = e.clientY - cRect.top - dragOffsetY;
+
+                const clampedX = Math.max(0, Math.min(newLeft, viewport.width - el.offsetWidth));
+                const clampedY = Math.max(0, Math.min(newTop, viewport.height - el.offsetHeight));
+
+                item.xPct = clampedX / viewport.width;
+                item.yPct = clampedY / viewport.height;
+                el.style.left = (item.xPct * 100) + "%";
+                el.style.top = (item.yPct * 100) + "%";
+              });
+
+              window.addEventListener("mouseup", () => {
+                isDraggingEl = false;
+              });
+
+              canvasWrapper.appendChild(el);
+            });
+
+            mainWrap.appendChild(canvasWrapper);
+          }
+
+          function addAnnotation(ann) {
+            if (!annotationsPerPage[currentPage]) annotationsPerPage[currentPage] = [];
+            annotationsPerPage[currentPage].push(ann);
+            renderAnnotateUI();
+          }
+
+          async function saveAnnotatedPdf() {
+            setStatus(status, "Gravando anotações e carimbos no PDF...", "");
+            try {
+              const { PDFDocument, rgb, StandardFonts } = PDFLib;
+              const pdf = await PDFDocument.load(pdfBuffer.slice(0));
+              const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+              const pages = pdf.getPages();
+
+              for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+                const pageNum = pIdx + 1;
+                const items = annotationsPerPage[pageNum];
+                if (!items || !items.length) continue;
+
+                const p = pages[pIdx];
+                const { width, height } = p.getSize();
+
+                for (const it of items) {
+                  const fontSize = it.type === "stamp" ? 16 : 13;
+                  const textWidth = font.widthOfTextAtSize(it.text, fontSize);
+                  const textHeight = font.heightAtSize(fontSize);
+
+                  const pdfX = it.xPct * width;
+                  const pdfY = height - (it.yPct * height) - textHeight;
+                  const rgbCol = hexToRgb(it.colorHex);
+
+                  if (it.type === "stamp") {
+                    p.drawRectangle({
+                      x: pdfX - 8,
+                      y: pdfY - 5,
+                      width: textWidth + 16,
+                      height: textHeight + 10,
+                      borderColor: rgb(rgbCol.r / 255, rgbCol.g / 255, rgbCol.b / 255),
+                      borderWidth: 2,
+                      color: rgb(1, 1, 1),
+                      opacity: 0.85
+                    });
+                  }
+
+                  p.drawText(it.text, {
+                    x: pdfX,
+                    y: pdfY,
+                    size: fontSize,
+                    font: font,
+                    color: rgb(rgbCol.r / 255, rgbCol.g / 255, rgbCol.b / 255)
+                  });
+                }
+              }
+
+              const outBytes = await pdf.save();
+              const baseName = getBaseFilename(currentFile ? currentFile.name : "documento");
+              prepareSaveAction(status, null);
+              const blob = new Blob([outBytes], { type: "application/pdf" });
+              triggerDownload(blob, `${baseName}_anotado.pdf`);
+              setStatus(status, "");
+            } catch (err) {
+              console.error(err);
+              setStatus(status, "Erro ao gravar anotações: " + err.message, "error");
+            }
+          }
+        };
+
+        // ---------- 4. Preencher Formulário (Forms) ----------
+        RENDERERS.forms = function (container) {
+          const top = document.createElement("div");
+          top.className = "workspace-tool-header";
+          top.innerHTML = `
+            <h2>${SVG_ICONS.forms} Preencher Formulário</h2>
+            <p class="subtitle">Identifique e preencha campos interativos de formulários oficiais (AcroForms) e congele as respostas.</p>
+          `;
+          container.appendChild(top);
+
+          let currentFile = null;
+          let pdfBuffer = null;
+          let detectedFields = [];
+
+          const dropWrap = document.createElement("div");
+          container.appendChild(dropWrap);
+
+          const mainWrap = document.createElement("div");
+          mainWrap.className = "hidden";
+          container.appendChild(mainWrap);
+
+          const status = document.createElement("div");
+          status.className = "status";
+          container.appendChild(status);
+
+          makeDropzone(dropWrap, { label: "um PDF com formulário para preencher" }, async (files) => {
+            if (!files || !files.length) return;
+            const file = files[0];
+            setStatus(status, "Inspecionando campos do formulário...", "");
+            const unlocked = await ensurePdfFileUnlocked(file, status);
+            if (!unlocked) return;
+
+            currentFile = unlocked.file;
+            pdfBuffer = unlocked.buffer;
+
+            try {
+              const { PDFDocument } = PDFLib;
+              const pdf = await PDFDocument.load(pdfBuffer.slice(0));
+              const form = pdf.getForm();
+              const fields = form.getFields();
+
+              detectedFields = fields.map(f => {
+                const name = f.getName();
+                const type = f.constructor ? f.constructor.name : "Field";
+                let val = "";
+                try {
+                  if (typeof f.getText === "function") val = f.getText() || "";
+                  else if (typeof f.isChecked === "function") val = f.isChecked();
+                } catch(e) {}
+                return { name, type, value: val, fieldRef: f };
+              });
+
+              dropWrap.classList.add("hidden");
+              mainWrap.classList.remove("hidden");
+              setStatus(status, "");
+              renderFormUI();
+            } catch (err) {
+              console.error(err);
+              setStatus(status, "Erro ao inspecionar formulário: " + err.message, "error");
+            }
+          });
+
+          function renderFormUI() {
+            mainWrap.innerHTML = "";
+
+            if (!detectedFields || detectedFields.length === 0) {
+              const emptyCard = document.createElement("div");
+              emptyCard.style.cssText = "background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;max-width:540px;margin:20px auto;";
+              emptyCard.innerHTML = `
+                <div style="font-size:32px;margin-bottom:12px;">📑</div>
+                <h3 style="margin:0 0 8px;font-size:15px;color:var(--ink);">Nenhum campo interativo encontrado</h3>
+                <p style="margin:0 0 20px;font-size:12px;color:var(--muted);line-height:1.5;">
+                  Este PDF não possui campos de formulário pré-configurados (AcroForms).<br />
+                  Você pode usar a ferramenta <strong>Carimbos & Textos</strong> ou <strong>Assinar PDF</strong> para adicionar texto e assinaturas livremente sobre as páginas.
+                </p>
+                <button type="button" class="action-btn" onclick="openTool('annotate')">Ir para Carimbos & Textos</button>
+              `;
+              mainWrap.appendChild(emptyCard);
+              return;
+            }
+
+            const headerBar = document.createElement("div");
+            headerBar.className = "redact-toolbar";
+
+            const info = document.createElement("div");
+            info.innerHTML = `<strong>${detectedFields.length} campos detectados</strong> <span style="color:var(--muted);font-size:12px;">• Preencha abaixo</span>`;
+            headerBar.appendChild(info);
+
+            const optionsWrap = document.createElement("div");
+            optionsWrap.style.cssText = "display:flex;align-items:center;gap:14px;";
+            optionsWrap.innerHTML = `
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);cursor:pointer;">
+                <input type="checkbox" id="flatten-form-toggle" checked />
+                <span>Achatar formulário (congelar respostas)</span>
+              </label>
+              <button type="button" class="action-btn" id="save-form-btn">Salvar Formulário Preenchido</button>
+            `;
+            headerBar.appendChild(optionsWrap);
+            mainWrap.appendChild(headerBar);
+
+            optionsWrap.querySelector("#save-form-btn").onclick = saveFilledForm;
+
+            const grid = document.createElement("div");
+            grid.className = "forms-fields-list";
+
+            detectedFields.forEach((f, idx) => {
+              const card = document.createElement("div");
+              card.className = "form-field-card";
+
+              const label = document.createElement("div");
+              label.className = "form-field-label";
+              label.innerHTML = `<span>${f.name || `Campo ${idx + 1}`}</span><span class="form-field-type">${f.type.replace("PDF", "")}</span>`;
+              card.appendChild(label);
+
+              if (f.type.includes("CheckBox")) {
+                const cbWrap = document.createElement("label");
+                cbWrap.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink);cursor:pointer;margin-top:4px;";
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.checked = !!f.value;
+                cb.onchange = () => { f.value = cb.checked; };
+                cbWrap.appendChild(cb);
+                cbWrap.appendChild(document.createTextNode("Marcado / Selecionado"));
+                card.appendChild(cbWrap);
+              } else {
+                const inp = document.createElement("input");
+                inp.type = "text";
+                inp.value = f.value || "";
+                inp.style.cssText = "background:var(--card);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;";
+                inp.oninput = () => { f.value = inp.value; };
+                card.appendChild(inp);
+              }
+
+              grid.appendChild(card);
+            });
+
+            mainWrap.appendChild(grid);
+          }
+
+          async function saveFilledForm() {
+            setStatus(status, "Aplicando respostas e gerando PDF...", "");
+            try {
+              const { PDFDocument } = PDFLib;
+              const pdf = await PDFDocument.load(pdfBuffer.slice(0));
+              const form = pdf.getForm();
+
+              detectedFields.forEach(f => {
+                try {
+                  const field = form.getField(f.name);
+                  if (f.type.includes("CheckBox")) {
+                    if (f.value) field.check();
+                    else field.uncheck();
+                  } else if (typeof field.setText === "function") {
+                    field.setText(f.value || "");
+                  }
+                } catch(e) {
+                  console.warn("Erro ao definir campo:", f.name, e);
+                }
+              });
+
+              const shouldFlatten = document.getElementById("flatten-form-toggle")?.checked;
+              if (shouldFlatten) {
+                form.flatten();
+              }
+
+              const outBytes = await pdf.save();
+              const baseName = getBaseFilename(currentFile ? currentFile.name : "formulario");
+              prepareSaveAction(status, null);
+              const blob = new Blob([outBytes], { type: "application/pdf" });
+              triggerDownload(blob, `${baseName}_preenchido.pdf`);
+              setStatus(status, "");
+            } catch (err) {
+              console.error(err);
+              setStatus(status, "Erro ao salvar formulário: " + err.message, "error");
+            }
+          }
         };
 
         // ---------- GERENCIADOR DE TEMA (CLARO / ESCURO / AUTO) ----------

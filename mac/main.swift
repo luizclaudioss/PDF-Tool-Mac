@@ -2,6 +2,7 @@ import Cocoa
 import WebKit
 import UniformTypeIdentifiers
 import PDFKit
+import Vision
 
 // MARK: - Application Delegate
 class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate {
@@ -140,7 +141,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
             ?? "PDF Tool"
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
         let copyright = Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
 
         let alert = NSAlert()
@@ -177,13 +178,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let rect = NSRect(x: 0, y: 0, width: 980, height: 640)
         window = NSWindow(
             contentRect: rect,
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.center()
         window.minSize = NSSize(width: 980, height: 640)
-        window.maxSize = NSSize(width: 980, height: 640)
         window.title = "PDF Tool"
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
@@ -197,6 +197,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         contentController.add(self, name: "nativeRevealFile")
         contentController.add(self, name: "nativeDecryptPdf")
         contentController.add(self, name: "nativeSaveEncrypted")
+        contentController.add(self, name: "nativeOcr")
         config.userContentController = contentController
         
         // Habilitar suporte a inspecionar
@@ -301,7 +302,96 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 return
             }
             handleEncryptedSave(filename: filename, data: fileData, password: password)
+        } else if message.name == "nativeOcr" {
+            guard let dict = message.body as? [String: Any],
+                  let base64 = dict["data"] as? String,
+                  let callbackId = dict["callbackId"] as? String,
+                  let pdfData = Data(base64Encoded: base64) else {
+                return
+            }
+            handleOcr(data: pdfData, callbackId: callbackId)
         }
+    }
+
+    // MARK: - Native OCR com Apple Vision e PDFKit
+    private func handleOcr(data: Data, callbackId: String) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let pdfDoc = PDFDocument(data: data) else {
+                DispatchQueue.main.async {
+                    self?.sendOcrResult(callbackId: callbackId, success: false, jsonString: nil, error: "Arquivo PDF inválido.")
+                }
+                return
+            }
+
+            var results: [[String: Any]] = []
+
+            for i in 0..<pdfDoc.pageCount {
+                guard let page = pdfDoc.page(at: i) else { continue }
+                var pageText = (page.string ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+                // Se a página não tiver texto selecionável nativo suficiente, roda OCR com Apple Vision
+                if pageText.isEmpty {
+                    let pageBounds = page.bounds(for: .mediaBox)
+                    let renderWidth = max(pageBounds.width * 2, 800)
+                    let renderHeight = max(pageBounds.height * 2, 1000)
+                    let thumbnail = page.thumbnail(of: NSSize(width: renderWidth, height: renderHeight), for: .mediaBox)
+                    var proposedRect = CGRect(origin: .zero, size: thumbnail.size)
+                    if let cgImage = thumbnail.cgImage(forProposedRect: &proposedRect, context: nil, hints: nil) {
+                        let request = VNRecognizeTextRequest()
+                        request.recognitionLevel = .accurate
+                        request.usesLanguageCorrection = true
+                        if #available(macOS 11.0, *) {
+                            request.recognitionLanguages = ["pt-BR", "en-US", "es-ES"]
+                        }
+                        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+                        do {
+                            try handler.perform([request])
+                            if let observations = request.results {
+                                let lines = observations.compactMap { $0.topCandidates(1).first?.string }
+                                pageText = lines.joined(separator: "\n")
+                            }
+                        } catch {
+                            print("Erro no OCR da página \(i + 1):", error)
+                        }
+                    }
+                }
+
+                results.append([
+                    "page": i + 1,
+                    "text": pageText
+                ])
+            }
+
+            do {
+                let jsonData = try JSONSerialization.data(withJSONObject: results, options: [])
+                let jsonString = String(data: jsonData, encoding: .utf8)
+                DispatchQueue.main.async {
+                    self?.sendOcrResult(callbackId: callbackId, success: true, jsonString: jsonString, error: nil)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self?.sendOcrResult(callbackId: callbackId, success: false, jsonString: nil, error: "Falha ao gerar resultado do OCR.")
+                }
+            }
+        }
+    }
+
+    private func sendOcrResult(callbackId: String, success: Bool, jsonString: String?, error: String?) {
+        var js = ""
+        if success, let jsonStr = jsonString {
+            if let data = jsonStr.data(using: .utf8) {
+                let b64 = data.base64EncodedString()
+                js = "window.onNativeOcrResult && window.onNativeOcrResult('\(callbackId)', true, '\(b64)', null);"
+            } else {
+                js = "window.onNativeOcrResult && window.onNativeOcrResult('\(callbackId)', false, null, 'Falha de codificação');"
+            }
+        } else {
+            let errStr = (error ?? "Erro desconhecido")
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "'", with: "\\'")
+            js = "window.onNativeOcrResult && window.onNativeOcrResult('\(callbackId)', false, null, '\(errStr)');"
+        }
+        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
 
     // Desbloqueio e descriptografia nativa de PDF com PDFKit
