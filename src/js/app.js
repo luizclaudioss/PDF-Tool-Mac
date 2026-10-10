@@ -8,9 +8,13 @@ const { PDFDocument, degrees } = PDFLib;
           remove: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
           pdf2jpg: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
           jpg2pdf: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="1.5"/><path d="m14 17-2-2-4 4h10z"/></svg>`,
+          compress: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6m0 0v6m0-6L3 21"/><path d="M20 10h-6m0 0V4m0 6 7-7"/></svg>`,
+          protect: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+          watermark: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z"/><path d="M14 13V8.5C14 7.12 12.88 6 11.5 6S9 7.12 9 8.5V13"/></svg>`,
           file: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>`,
           image: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
           lock: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+          unlock: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`,
           eye: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
           eyeOff: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`,
           rotateCw: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`,
@@ -47,6 +51,24 @@ const { PDFDocument, degrees } = PDFLib;
             icon: SVG_ICONS.remove,
             title: "Remover páginas",
             desc: "Escolha quais páginas remover do PDF.",
+          },
+          {
+            id: "compress",
+            icon: SVG_ICONS.compress,
+            title: "Comprimir PDF",
+            desc: "Reduza o tamanho do seu arquivo PDF mantendo boa qualidade visual.",
+          },
+          {
+            id: "protect",
+            icon: SVG_ICONS.protect,
+            title: "Proteger / Desproteger",
+            desc: "Adicione senha de abertura ao PDF ou remova a proteção existente.",
+          },
+          {
+            id: "watermark",
+            icon: SVG_ICONS.watermark,
+            title: "Marca d'Água e Numeração",
+            desc: "Adicione carimbo com texto personalizado ou numere as páginas do seu PDF.",
           },
           {
             id: "pdf2jpg",
@@ -506,6 +528,23 @@ const { PDFDocument, degrees } = PDFLib;
           if (currentActiveStatusEl) {
             renderSavedFileSuccess({ filename, fullPath: null, isFolder: false });
           }
+        }
+
+        async function triggerEncryptedDownload(blob, filename, password) {
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeSaveEncrypted) {
+            try {
+              const base64 = await blobToBase64(blob);
+              window.webkit.messageHandlers.nativeSaveEncrypted.postMessage({
+                filename: filename,
+                data: base64,
+                password: password
+              });
+              return;
+            } catch (err) {
+              console.warn("Erro no salvamento com senha nativo macOS:", err);
+            }
+          }
+          await triggerDownload(blob, filename);
         }
 
         async function triggerBatchDownload(files) {
@@ -1966,6 +2005,799 @@ const { PDFDocument, degrees } = PDFLib;
               btn.disabled = false;
             }
           });
+        };
+
+        function formatFileSize(bytes) {
+          if (!bytes || bytes === 0) return "0 Bytes";
+          const k = 1024;
+          const sizes = ["Bytes", "KB", "MB", "GB"];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+        }
+
+        // ---------- COMPRIMIR PDF ----------
+        RENDERERS.compress = function (container) {
+          container.innerHTML =
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.compress}</span> Comprimir PDF</h2><p class="hint">Escolha o nível de compressão para reduzir o tamanho do arquivo mantendo boa nitidez.</p>`;
+
+          let fileBuffer = null;
+          let currentFile = null;
+          let selectedPreset = "medium";
+
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
+          const optionsBox = document.createElement("div");
+          optionsBox.className = "tool-section-box";
+          optionsBox.style.display = "none";
+          optionsBox.innerHTML = `
+            <div>
+              <div class="tool-section-title">Nível de Compressão</div>
+              <p class="tool-section-desc">Selecione o equilíbrio desejado entre qualidade de imagem e redução do tamanho do arquivo:</p>
+            </div>
+            <div class="compression-cards-grid">
+              <div class="compression-card" data-preset="high">
+                <div class="compression-card-header">
+                  <span class="compression-card-title">Alta Compressão</span>
+                  <span class="compression-card-badge">~70% menor</span>
+                </div>
+                <p class="compression-card-desc">Redução máxima. Ideal para portais com limites rígidos (ex: e-mails, concursos, tribunais).</p>
+              </div>
+              <div class="compression-card selected" data-preset="medium">
+                <div class="compression-card-header">
+                  <span class="compression-card-title">Recomendada</span>
+                  <span class="compression-card-badge">~50% menor</span>
+                </div>
+                <p class="compression-card-desc">Equilíbrio perfeito entre ótima legibilidade de leitura e redução eficiente de tamanho.</p>
+              </div>
+              <div class="compression-card" data-preset="low">
+                <div class="compression-card-header">
+                  <span class="compression-card-title">Leve</span>
+                  <span class="compression-card-badge">~30% menor</span>
+                </div>
+                <p class="compression-card-desc">Menor redução, preservando a máxima nitidez e fidelidade visual em imagens e fotos.</p>
+              </div>
+            </div>
+          `;
+
+          const cards = optionsBox.querySelectorAll(".compression-card");
+          cards.forEach((card) => {
+            card.addEventListener("click", () => {
+              cards.forEach((c) => c.classList.remove("selected"));
+              card.classList.add("selected");
+              selectedPreset = card.dataset.preset;
+            });
+          });
+
+          const resultWrap = document.createElement("div");
+
+          const btn = document.createElement("button");
+          btn.className = "action-btn";
+          btn.textContent = "Comprimir e Baixar PDF";
+          btn.disabled = true;
+
+          const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFile = null;
+            fileBarWrap.innerHTML = "";
+            optionsBox.style.display = "none";
+            resultWrap.innerHTML = "";
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages, bytes) {
+            const sizeStr = formatFileSize(bytes);
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág. • ${sizeStr})</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ${SVG_ICONS.close} Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
+          }
+
+          makeDropzone(
+            container,
+            { label: "o PDF" },
+            async (newFiles) => {
+              if (!newFiles[0]) return;
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFile = unlocked.file;
+              fileBuffer = unlocked.buffer;
+              resultWrap.innerHTML = "";
+              setStatus(status, "Analisando páginas...", "");
+              try {
+                const pdf = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                renderLoadedBar(currentFile.name, pdf.numPages, fileBuffer.byteLength);
+                optionsBox.style.display = "flex";
+                btn.disabled = false;
+                setStatus(status, "Escolha o nível de compressão e clique em 'Comprimir e Baixar PDF'.", "");
+              } catch (err) {
+                setStatus(status, "Erro ao carregar PDF: " + err.message, "error");
+              }
+            }
+          );
+
+          btn.addEventListener("click", async () => {
+            if (!fileBuffer || !currentFile) return;
+            btn.disabled = true;
+            resultWrap.innerHTML = "";
+            setStatus(status, "Iniciando compressão...", "");
+
+            let scale = 1.15;
+            let quality = 0.65;
+            if (selectedPreset === "high") {
+              scale = 0.85;
+              quality = 0.40;
+            } else if (selectedPreset === "low") {
+              scale = 1.5;
+              quality = 0.80;
+            }
+
+            try {
+              const loadingTask = pdfjsLib.getDocument({ data: fileBuffer.slice(0) });
+              const pdf = await loadingTask.promise;
+              const doc = await PDFDocument.create();
+
+              for (let i = 1; i <= pdf.numPages; i++) {
+                setStatus(status, `Comprimindo página ${i} de ${pdf.numPages}...`, "");
+                const page = await pdf.getPage(i);
+                const unscaledVp = page.getViewport({ scale: 1.0 });
+                const renderVp = page.getViewport({ scale: scale });
+
+                const canvas = document.createElement("canvas");
+                canvas.width = renderVp.width;
+                canvas.height = renderVp.height;
+                const ctx = canvas.getContext("2d");
+                await page.render({ canvasContext: ctx, viewport: renderVp }).promise;
+
+                const jpegBlob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+                const jpegBytes = await readAsArrayBuffer(jpegBlob);
+                const embeddedJpg = await doc.embedJpg(jpegBytes);
+
+                const newPage = doc.addPage([unscaledVp.width, unscaledVp.height]);
+                newPage.drawImage(embeddedJpg, {
+                  x: 0,
+                  y: 0,
+                  width: unscaledVp.width,
+                  height: unscaledVp.height,
+                });
+              }
+
+              setStatus(status, "Finalizando e gerando PDF comprimido...", "");
+              const outBytes = await doc.save();
+              const outBlob = new Blob([outBytes], { type: "application/pdf" });
+
+              const origSize = fileBuffer.byteLength;
+              const newSize = outBytes.byteLength;
+              const diffPercent = Math.max(0, Math.round(((origSize - newSize) / origSize) * 100));
+
+              resultWrap.innerHTML = `
+                <div class="compress-result-banner">
+                  <div class="compress-result-icon">${SVG_ICONS.check}</div>
+                  <div>
+                    <strong>Compressão concluída com sucesso!</strong><br />
+                    Tamanho reduzido de <strong>${formatFileSize(origSize)}</strong> para <strong>${formatFileSize(newSize)}</strong> (${diffPercent}% de economia de espaço).
+                  </div>
+                </div>
+              `;
+
+              prepareSaveAction(status, btn);
+              const outName = `${getBaseFilename(currentFile.name)}_comprimido.pdf`;
+              await triggerDownload(outBlob, outName);
+            } catch (err) {
+              setStatus(status, "Erro na compressão: " + err.message, "error");
+              btn.disabled = false;
+            }
+          });
+
+          container.appendChild(fileBarWrap);
+          container.appendChild(optionsBox);
+          container.appendChild(resultWrap);
+          container.appendChild(btn);
+          container.appendChild(status);
+        };
+
+        // ---------- PROTEGER E DESPROTEGER PDF ----------
+        RENDERERS.protect = function (container) {
+          container.innerHTML =
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.protect}</span> Proteger / Desproteger PDF</h2><p class="hint">Adicione uma senha forte ao seu documento ou remova a proteção de um PDF desbloqueado.</p>`;
+
+          let fileBuffer = null;
+          let currentFile = null;
+          let wasOriginallyEncrypted = false;
+          let activeMode = "encrypt";
+
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
+          const optionsBox = document.createElement("div");
+          optionsBox.className = "tool-section-box";
+          optionsBox.style.display = "none";
+
+          const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFile = null;
+            wasOriginallyEncrypted = false;
+            fileBarWrap.innerHTML = "";
+            optionsBox.style.display = "none";
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ${SVG_ICONS.close} Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
+          }
+
+          function renderModeUI() {
+            optionsBox.innerHTML = "";
+
+            const tabs = document.createElement("div");
+            tabs.className = "protect-tabs";
+            const btnEncrypt = document.createElement("button");
+            btnEncrypt.type = "button";
+            btnEncrypt.className = "protect-tab-btn" + (activeMode === "encrypt" ? " active" : "");
+            btnEncrypt.innerHTML = `${SVG_ICONS.lock} Adicionar Senha`;
+
+            const btnDecrypt = document.createElement("button");
+            btnDecrypt.type = "button";
+            btnDecrypt.className = "protect-tab-btn" + (activeMode === "decrypt" ? " active" : "");
+            btnDecrypt.innerHTML = `${SVG_ICONS.unlock} Remover Senha`;
+
+            btnEncrypt.onclick = () => {
+              activeMode = "encrypt";
+              renderModeUI();
+            };
+            btnDecrypt.onclick = () => {
+              activeMode = "decrypt";
+              renderModeUI();
+            };
+            tabs.append(btnEncrypt, btnDecrypt);
+            optionsBox.appendChild(tabs);
+
+            if (activeMode === "encrypt") {
+              const formWrap = document.createElement("div");
+              formWrap.innerHTML = `
+                <div class="tool-section-title">Definir Senha de Abertura</div>
+                <p class="tool-section-desc">O PDF será criptografado com a proteção padrão do macOS. Ninguém conseguirá abrir o arquivo sem esta senha.</p>
+                <div style="margin-top: 14px; max-width: 360px;">
+                  <div class="form-field-group">
+                    <label class="form-field-label">Digite a Senha:</label>
+                    <div class="input-with-eye">
+                      <input type="password" id="protect-pwd" placeholder="Senha do documento" autocomplete="off" />
+                      <button type="button" class="eye-toggle" id="toggle-pwd-1">${SVG_ICONS.eye}</button>
+                    </div>
+                  </div>
+                  <div class="form-field-group">
+                    <label class="form-field-label">Confirme a Senha:</label>
+                    <div class="input-with-eye">
+                      <input type="password" id="protect-pwd-confirm" placeholder="Repita a senha" autocomplete="off" />
+                      <button type="button" class="eye-toggle" id="toggle-pwd-2">${SVG_ICONS.eye}</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+              optionsBox.appendChild(formWrap);
+
+              const p1 = formWrap.querySelector("#protect-pwd");
+              const t1 = formWrap.querySelector("#toggle-pwd-1");
+              const p2 = formWrap.querySelector("#protect-pwd-confirm");
+              const t2 = formWrap.querySelector("#toggle-pwd-2");
+
+              t1.onclick = () => {
+                p1.type = p1.type === "password" ? "text" : "password";
+                t1.innerHTML = p1.type === "password" ? SVG_ICONS.eye : SVG_ICONS.eyeOff;
+              };
+              t2.onclick = () => {
+                p2.type = p2.type === "password" ? "text" : "password";
+                t2.innerHTML = p2.type === "password" ? SVG_ICONS.eye : SVG_ICONS.eyeOff;
+              };
+              btn.textContent = "Proteger e Salvar PDF";
+            } else {
+              const decryptInfo = document.createElement("div");
+              decryptInfo.innerHTML = `
+                <div class="tool-section-title">Remover Proteção Definitivamente</div>
+                <p class="tool-section-desc" style="line-height: 1.5;">
+                  ${wasOriginallyEncrypted 
+                    ? "Este documento foi desbloqueado com sucesso usando a senha fornecida. Ao clicar abaixo, o app criará uma nova cópia 100% desprotegida (livre de senha), pronta para abrir sem pedir autenticação." 
+                    : "Ao salvar esta cópia, o documento será reexportado em formato padrão desprotegido, sem exigir senha para abertura."}
+                </p>
+              `;
+              optionsBox.appendChild(decryptInfo);
+              btn.textContent = "Salvar PDF Sem Senha";
+            }
+          }
+
+          const btn = document.createElement("button");
+          btn.className = "action-btn";
+          btn.textContent = "Proteger e Salvar PDF";
+          btn.disabled = true;
+
+          makeDropzone(
+            container,
+            { label: "o PDF" },
+            async (newFiles) => {
+              if (!newFiles[0]) return;
+              const originalFile = newFiles[0];
+              const testBuf = await readAsArrayBuffer(originalFile);
+              let isEncrypted = false;
+              try {
+                const test = pdfjsLib.getDocument({ data: testBuf.slice(0) });
+                await test.promise;
+              } catch (e) {
+                if (e.name === "PasswordException" || (e.message && e.message.toLowerCase().includes("password"))) {
+                  isEncrypted = true;
+                }
+              }
+
+              const unlocked = await ensurePdfFileUnlocked(originalFile, status);
+              if (!unlocked) return;
+              currentFile = unlocked.file;
+              fileBuffer = unlocked.buffer;
+              wasOriginallyEncrypted = isEncrypted;
+              activeMode = wasOriginallyEncrypted ? "decrypt" : "encrypt";
+
+              try {
+                const pdf = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                renderLoadedBar(currentFile.name, pdf.numPages);
+                renderModeUI();
+                optionsBox.style.display = "flex";
+                btn.disabled = false;
+                setStatus(status, "");
+              } catch (err) {
+                setStatus(status, "Erro: " + err.message, "error");
+              }
+            }
+          );
+
+          btn.addEventListener("click", async () => {
+            if (!fileBuffer || !currentFile) return;
+
+            if (activeMode === "encrypt") {
+              const p1 = optionsBox.querySelector("#protect-pwd");
+              const p2 = optionsBox.querySelector("#protect-pwd-confirm");
+              const pwd = (p1 ? p1.value : "").trim();
+              const confirm = (p2 ? p2.value : "").trim();
+
+              if (!pwd) {
+                setStatus(status, "Digite uma senha para proteger o documento.", "error");
+                p1?.focus();
+                return;
+              }
+              if (pwd !== confirm) {
+                setStatus(status, "As senhas digitadas não coincidem. Verifique e tente novamente.", "error");
+                p2?.focus();
+                return;
+              }
+
+              btn.disabled = true;
+              setStatus(status, "Aplicando criptografia e preparando salvamento...", "");
+              try {
+                const cleanBlob = new Blob([fileBuffer], { type: "application/pdf" });
+                prepareSaveAction(status, btn);
+                const outName = `${getBaseFilename(currentFile.name)}_protegido.pdf`;
+                await triggerEncryptedDownload(cleanBlob, outName, pwd);
+              } catch (err) {
+                setStatus(status, "Erro ao proteger PDF: " + err.message, "error");
+                btn.disabled = false;
+              }
+            } else {
+              btn.disabled = true;
+              setStatus(status, "Gerando versão desprotegida...", "");
+              try {
+                const cleanBlob = new Blob([fileBuffer], { type: "application/pdf" });
+                prepareSaveAction(status, btn);
+                const outName = `${getBaseFilename(currentFile.name)}_desprotegido.pdf`;
+                await triggerDownload(cleanBlob, outName);
+              } catch (err) {
+                setStatus(status, "Erro ao desproteger PDF: " + err.message, "error");
+                btn.disabled = false;
+              }
+            }
+          });
+
+          container.appendChild(fileBarWrap);
+          container.appendChild(optionsBox);
+          container.appendChild(btn);
+          container.appendChild(status);
+        };
+
+        // ---------- MARCA D'ÁGUA E NUMERAÇÃO ----------
+        RENDERERS.watermark = function (container) {
+          container.innerHTML =
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.watermark}</span> Marca d'Água e Numeração</h2><p class="hint">Adicione carimbos de texto e/ou numere as páginas do seu documento com visualização em tempo real.</p>`;
+
+          let fileBuffer = null;
+          let currentFile = null;
+          let pageCount = 0;
+          let firstPageCanvas = null;
+
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
+          const mainLayout = document.createElement("div");
+          mainLayout.className = "watermark-layout";
+          mainLayout.style.display = "none";
+
+          const controlsWrap = document.createElement("div");
+          controlsWrap.className = "watermark-controls";
+
+          const wmSection = document.createElement("div");
+          wmSection.className = "tool-section-box";
+          wmSection.style.margin = "0";
+          wmSection.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="tool-section-title">
+                <input type="checkbox" id="wm-enable" checked style="width:16px;height:16px;cursor:pointer;accent-color:var(--green);" />
+                <label for="wm-enable" style="cursor:pointer;">Carimbo / Marca d'Água</label>
+              </div>
+            </div>
+            <div id="wm-options">
+              <div class="form-field-group">
+                <label class="form-field-label">Texto da Marca d'Água:</label>
+                <input type="text" id="wm-text" value="CONFIDENCIAL" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--ink);font-size:13.5px;" />
+                <div class="chips-row">
+                  <button type="button" class="chip-btn" data-text="CONFIDENCIAL">CONFIDENCIAL</button>
+                  <button type="button" class="chip-btn" data-text="RASCUNHO">RASCUNHO</button>
+                  <button type="button" class="chip-btn" data-text="CÓPIA">CÓPIA</button>
+                  <button type="button" class="chip-btn" data-text="APROVADO">APROVADO</button>
+                  <button type="button" class="chip-btn" data-text="URGENTE">URGENTE</button>
+                  <button type="button" class="chip-btn" data-text="ORIGINAL">ORIGINAL</button>
+                </div>
+              </div>
+              <div class="options-row-group">
+                <div>
+                  <label class="form-field-label" style="display:block;margin-bottom:4px;">Orientação:</label>
+                  <select id="wm-orient" class="select-native">
+                    <option value="diagonal">Diagonal (45°)</option>
+                    <option value="horizontal">Horizontal (0°)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-field-label" style="display:block;margin-bottom:4px;">Opacidade:</label>
+                  <select id="wm-opacity" class="select-native">
+                    <option value="0.15">15% (Discreta)</option>
+                    <option value="0.30" selected>30% (Recomendada)</option>
+                    <option value="0.50">50% (Destacada)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const numSection = document.createElement("div");
+          numSection.className = "tool-section-box";
+          numSection.style.margin = "0";
+          numSection.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="tool-section-title">
+                <input type="checkbox" id="num-enable" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green);" />
+                <label for="num-enable" style="cursor:pointer;">Numeração de Páginas</label>
+              </div>
+            </div>
+            <div id="num-options" style="opacity:0.6;pointer-events:none;">
+              <div class="options-row-group">
+                <div>
+                  <label class="form-field-label" style="display:block;margin-bottom:4px;">Posição:</label>
+                  <select id="num-pos" class="select-native">
+                    <option value="bottom-center" selected>Rodapé (Centro)</option>
+                    <option value="bottom-right">Rodapé (Direita)</option>
+                    <option value="top-center">Cabeçalho (Centro)</option>
+                    <option value="top-right">Cabeçalho (Direita)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-field-label" style="display:block;margin-bottom:4px;">Formato:</label>
+                  <select id="num-format" class="select-native">
+                    <option value="page-of" selected>Página {n} de {total}</option>
+                    <option value="slash">{n} / {total}</option>
+                    <option value="simple-page">Pág. {n}</option>
+                    <option value="only-num">{n}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          `;
+
+          controlsWrap.append(wmSection, numSection);
+
+          const previewPane = document.createElement("div");
+          previewPane.className = "watermark-preview-pane";
+          previewPane.innerHTML = `
+            <div class="watermark-preview-label">Pré-visualização (Pág. 1)</div>
+            <div class="watermark-canvas-wrap">
+              <canvas id="wm-preview-canvas"></canvas>
+            </div>
+          `;
+
+          mainLayout.append(controlsWrap, previewPane);
+
+          const btn = document.createElement("button");
+          btn.className = "action-btn";
+          btn.textContent = "Aplicar e Baixar PDF";
+          btn.disabled = true;
+
+          const status = statusEl(container);
+
+          function updateControlsState() {
+            const wmEnable = wmSection.querySelector("#wm-enable").checked;
+            const wmOpt = wmSection.querySelector("#wm-options");
+            wmOpt.style.opacity = wmEnable ? "1" : "0.5";
+            wmOpt.style.pointerEvents = wmEnable ? "all" : "none";
+
+            const numEnable = numSection.querySelector("#num-enable").checked;
+            const numOpt = numSection.querySelector("#num-options");
+            numOpt.style.opacity = numEnable ? "1" : "0.5";
+            numOpt.style.pointerEvents = numEnable ? "all" : "none";
+
+            btn.disabled = !wmEnable && !numEnable;
+            renderPreview();
+          }
+
+          function renderPreview() {
+            if (!firstPageCanvas) return;
+            const canvas = previewPane.querySelector("#wm-preview-canvas");
+            if (!canvas) return;
+            canvas.width = firstPageCanvas.width;
+            canvas.height = firstPageCanvas.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(firstPageCanvas, 0, 0);
+
+            const wmEnable = wmSection.querySelector("#wm-enable").checked;
+            const wmText = (wmSection.querySelector("#wm-text").value || "CONFIDENCIAL").trim();
+            const wmOrient = wmSection.querySelector("#wm-orient").value;
+            const wmOpacity = parseFloat(wmSection.querySelector("#wm-opacity").value || "0.3");
+
+            if (wmEnable && wmText) {
+              ctx.save();
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              if (wmOrient === "diagonal") {
+                ctx.rotate(-Math.PI / 4);
+              }
+              const fontSize = Math.max(16, Math.round(canvas.width / 8));
+              ctx.font = `bold ${fontSize}px sans-serif`;
+              ctx.fillStyle = `rgba(100, 116, 139, ${wmOpacity})`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(wmText, 0, 0);
+              ctx.restore();
+            }
+
+            const numEnable = numSection.querySelector("#num-enable").checked;
+            if (numEnable) {
+              const pos = numSection.querySelector("#num-pos").value;
+              const fmt = numSection.querySelector("#num-format").value;
+              let label = `Página 1 de ${pageCount}`;
+              if (fmt === "slash") label = `1 / ${pageCount}`;
+              else if (fmt === "simple-page") label = "Pág. 1";
+              else if (fmt === "only-num") label = "1";
+
+              ctx.save();
+              const numFontSize = Math.max(9, Math.round(canvas.width / 32));
+              ctx.font = `${numFontSize}px sans-serif`;
+              ctx.fillStyle = "rgba(71, 85, 105, 0.85)";
+              let x = canvas.width / 2;
+              let y = canvas.height - 12;
+              ctx.textAlign = "center";
+
+              if (pos === "bottom-right") {
+                x = canvas.width - 14;
+                ctx.textAlign = "right";
+              } else if (pos === "top-center") {
+                y = 16;
+              } else if (pos === "top-right") {
+                x = canvas.width - 14;
+                y = 16;
+                ctx.textAlign = "right";
+              }
+
+              ctx.fillText(label, x, y);
+              ctx.restore();
+            }
+          }
+
+          wmSection.querySelectorAll(".chip-btn").forEach((chip) => {
+            chip.addEventListener("click", () => {
+              wmSection.querySelector("#wm-text").value = chip.dataset.text;
+              renderPreview();
+            });
+          });
+
+          wmSection.querySelector("#wm-enable").addEventListener("change", updateControlsState);
+          wmSection.querySelector("#wm-text").addEventListener("input", renderPreview);
+          wmSection.querySelector("#wm-orient").addEventListener("change", renderPreview);
+          wmSection.querySelector("#wm-opacity").addEventListener("change", renderPreview);
+          numSection.querySelector("#num-enable").addEventListener("change", updateControlsState);
+          numSection.querySelector("#num-pos").addEventListener("change", renderPreview);
+          numSection.querySelector("#num-format").addEventListener("change", renderPreview);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFile = null;
+            firstPageCanvas = null;
+            fileBarWrap.innerHTML = "";
+            mainLayout.style.display = "none";
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ${SVG_ICONS.close} Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
+          }
+
+          makeDropzone(
+            container,
+            { label: "o PDF" },
+            async (newFiles) => {
+              if (!newFiles[0]) return;
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFile = unlocked.file;
+              fileBuffer = unlocked.buffer;
+              setStatus(status, "Carregando visualização...", "");
+
+              try {
+                const pdf = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                pageCount = pdf.numPages;
+                const page1 = await pdf.getPage(1);
+                const vp = page1.getViewport({ scale: 0.6 });
+                firstPageCanvas = document.createElement("canvas");
+                firstPageCanvas.width = vp.width;
+                firstPageCanvas.height = vp.height;
+                await page1.render({ canvasContext: firstPageCanvas.getContext("2d"), viewport: vp }).promise;
+
+                renderLoadedBar(currentFile.name, pageCount);
+                mainLayout.style.display = "grid";
+                updateControlsState();
+                setStatus(status, "");
+              } catch (err) {
+                setStatus(status, "Erro: " + err.message, "error");
+              }
+            }
+          );
+
+          btn.addEventListener("click", async () => {
+            if (!fileBuffer || !currentFile) return;
+            const wmEnable = wmSection.querySelector("#wm-enable").checked;
+            const wmText = (wmSection.querySelector("#wm-text").value || "CONFIDENCIAL").trim();
+            const wmOrient = wmSection.querySelector("#wm-orient").value;
+            const wmOpacity = parseFloat(wmSection.querySelector("#wm-opacity").value || "0.3");
+
+            const numEnable = numSection.querySelector("#num-enable").checked;
+            const pos = numSection.querySelector("#num-pos").value;
+            const fmt = numSection.querySelector("#num-format").value;
+
+            btn.disabled = true;
+            setStatus(status, "Aplicando alterações nas páginas...", "");
+
+            try {
+              const doc = await PDFDocument.load(fileBuffer.slice(0), { ignoreEncryption: true });
+              const font = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+              const fontBold = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+              const pages = doc.getPages();
+              const total = pages.length;
+
+              pages.forEach((page, idx) => {
+                const { width, height } = page.getSize();
+                const curPageNum = idx + 1;
+
+                if (wmEnable && wmText) {
+                  const fontSize = Math.max(28, Math.round(width / 11));
+                  const textWidth = fontBold.widthOfTextAtSize(wmText, fontSize);
+                  const isDiag = wmOrient === "diagonal";
+
+                  if (isDiag) {
+                    const angleRad = Math.PI / 4;
+                    const x = width / 2 - (textWidth / 2) * Math.cos(angleRad);
+                    const y = height / 2 - (textWidth / 2) * Math.sin(angleRad);
+                    page.drawText(wmText, {
+                      x,
+                      y,
+                      size: fontSize,
+                      font: fontBold,
+                      color: PDFLib.rgb(0.5, 0.5, 0.5),
+                      opacity: wmOpacity,
+                      rotate: degrees(45),
+                    });
+                  } else {
+                    const x = (width - textWidth) / 2;
+                    const y = height / 2 - fontSize / 2;
+                    page.drawText(wmText, {
+                      x,
+                      y,
+                      size: fontSize,
+                      font: fontBold,
+                      color: PDFLib.rgb(0.5, 0.5, 0.5),
+                      opacity: wmOpacity,
+                    });
+                  }
+                }
+
+                if (numEnable) {
+                  let label = `Página ${curPageNum} de ${total}`;
+                  if (fmt === "slash") label = `${curPageNum} / ${total}`;
+                  else if (fmt === "simple-page") label = `Pág. ${curPageNum}`;
+                  else if (fmt === "only-num") label = `${curPageNum}`;
+
+                  const numSize = 10;
+                  const numWidth = font.widthOfTextAtSize(label, numSize);
+                  let x = (width - numWidth) / 2;
+                  let y = 24;
+
+                  if (pos === "bottom-right") {
+                    x = width - numWidth - 36;
+                    y = 24;
+                  } else if (pos === "top-center") {
+                    y = height - 32;
+                  } else if (pos === "top-right") {
+                    x = width - numWidth - 36;
+                    y = height - 32;
+                  }
+
+                  page.drawText(label, {
+                    x,
+                    y,
+                    size: numSize,
+                    font: font,
+                    color: PDFLib.rgb(0.3, 0.3, 0.3),
+                  });
+                }
+              });
+
+              const outBytes = await doc.save();
+              const blob = new Blob([outBytes], { type: "application/pdf" });
+              prepareSaveAction(status, btn);
+              const outName = `${getBaseFilename(currentFile.name)}_personalizado.pdf`;
+              await triggerDownload(blob, outName);
+            } catch (err) {
+              setStatus(status, "Erro: " + err.message, "error");
+              btn.disabled = false;
+            }
+          });
+
+          container.appendChild(fileBarWrap);
+          container.appendChild(mainLayout);
+          container.appendChild(btn);
+          container.appendChild(status);
         };
 // Prevenir comportamento padrão do navegador ao arrastar arquivos na janela
 window.addEventListener("dragover", (e) => e.preventDefault());

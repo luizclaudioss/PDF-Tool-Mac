@@ -174,16 +174,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
 
     // MARK: - Window Setup
     private func setupWindow() {
-        let rect = NSRect(x: 0, y: 0, width: 960, height: 580)
+        let rect = NSRect(x: 0, y: 0, width: 980, height: 640)
         window = NSWindow(
             contentRect: rect,
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.center()
-        window.minSize = NSSize(width: 960, height: 580)
-        window.maxSize = NSSize(width: 960, height: 580)
+        window.minSize = NSSize(width: 880, height: 560)
         window.title = "PDF Tool"
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
@@ -196,6 +195,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         contentController.add(self, name: "nativeOpenFile")
         contentController.add(self, name: "nativeRevealFile")
         contentController.add(self, name: "nativeDecryptPdf")
+        contentController.add(self, name: "nativeSaveEncrypted")
         config.userContentController = contentController
         
         // Habilitar suporte a inspecionar
@@ -291,6 +291,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 return
             }
             handleDecryptPdf(data: pdfData, password: password, callbackId: callbackId)
+        } else if message.name == "nativeSaveEncrypted" {
+            guard let dict = message.body as? [String: Any],
+                  let filename = dict["filename"] as? String,
+                  let base64String = dict["data"] as? String,
+                  let password = dict["password"] as? String,
+                  let fileData = Data(base64Encoded: base64String) else {
+                return
+            }
+            handleEncryptedSave(filename: filename, data: fileData, password: password)
         }
     }
 
@@ -391,6 +400,72 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                         self.webView.evaluateJavaScript(js, completionHandler: nil)
                     } catch {
                         let alert = NSAlert(error: error)
+                        alert.runModal()
+                    }
+                } else {
+                    let js = "window.onNativeSaveCancelled && window.onNativeSaveCancelled();"
+                    self.webView.evaluateJavaScript(js, completionHandler: nil)
+                }
+            }
+
+            if let win = self.window, win.attachedSheet == nil {
+                savePanel.beginSheetModal(for: win, completionHandler: finishSave)
+            } else {
+                savePanel.begin(completionHandler: finishSave)
+            }
+        }
+    }
+
+    // Salvamento com criptografia nativa (PDF com senha)
+    private func handleEncryptedSave(filename: String, data: Data, password: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let savePanel = NSSavePanel()
+            savePanel.nameFieldStringValue = filename
+            savePanel.canCreateDirectories = true
+            savePanel.isExtensionHidden = false
+            savePanel.title = "Salvar PDF com Senha"
+            savePanel.prompt = "Salvar Protegido"
+
+            if let lastPath = UserDefaults.standard.string(forKey: "lastChosenDirectoryPath"),
+               FileManager.default.fileExists(atPath: lastPath) {
+                savePanel.directoryURL = URL(fileURLWithPath: lastPath)
+            }
+
+            if #available(macOS 11.0, *) {
+                savePanel.allowedContentTypes = [.pdf]
+            } else {
+                savePanel.allowedFileTypes = ["pdf"]
+            }
+
+            let finishSave: (NSApplication.ModalResponse) -> Void = { response in
+                if response == .OK, let targetURL = savePanel.url {
+                    UserDefaults.standard.set(targetURL.deletingLastPathComponent().path, forKey: "lastChosenDirectoryPath")
+                    guard let pdfDoc = PDFDocument(data: data) else {
+                        let alert = NSAlert()
+                        alert.messageText = "Erro ao processar PDF"
+                        alert.informativeText = "Não foi possível carregar os dados para aplicar a proteção."
+                        alert.runModal()
+                        return
+                    }
+                    let options: [PDFDocumentWriteOption: Any] = [
+                        .userPasswordOption: password,
+                        .ownerPasswordOption: password
+                    ]
+                    let success = pdfDoc.write(to: targetURL, withOptions: options)
+                    if success {
+                        let escapedName = targetURL.lastPathComponent
+                            .replacingOccurrences(of: "\\", with: "\\\\")
+                            .replacingOccurrences(of: "'", with: "\\'")
+                        let escapedPath = targetURL.path
+                            .replacingOccurrences(of: "\\", with: "\\\\")
+                            .replacingOccurrences(of: "'", with: "\\'")
+                        let js = "window.onNativeSaveSuccess && window.onNativeSaveSuccess('\(escapedName)', '\(escapedPath)');"
+                        self.webView.evaluateJavaScript(js, completionHandler: nil)
+                    } else {
+                        let alert = NSAlert()
+                        alert.messageText = "Erro ao salvar"
+                        alert.informativeText = "O macOS não conseguiu gravar o arquivo protegido no destino selecionado."
                         alert.runModal()
                     }
                 } else {
