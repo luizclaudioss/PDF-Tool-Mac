@@ -17,7 +17,7 @@ Aplicativo nativo macOS para manipulação, organização e conversão de docume
 ## 🧩 Ferramentas Incluídas
 
 1. **🧩 Combinar PDF:** Junte múltiplos arquivos em um único PDF na ordem que desejar, com rotação individual e reordenação interativa.
-2. **✂️ Dividir PDF:** Selecione páginas específicas de um PDF e extraia-as em um novo arquivo.
+2. **✂️ Extrair Páginas:** Selecione páginas específicas de um PDF e extraia-as em um novo arquivo.
 3. **🔄 Girar PDF:** Gire páginas individuais ou todas as páginas de uma vez (90°, 180°, 270°).
 4. **🗑️ Remover Páginas:** Marque visualmente as páginas que deseja excluir do seu documento.
 5. **🖼️ PDF para JPG:** Converta páginas do PDF em imagens JPG de alta resolução, com seleção de páginas e rotação.

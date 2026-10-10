@@ -11,7 +11,7 @@ const { PDFDocument, degrees } = PDFLib;
           {
             id: "split",
             icon: "✂️",
-            title: "Dividir PDF",
+            title: "Extrair páginas",
             desc: "Selecione páginas específicas e extraia-as em um novo PDF.",
           },
           {
@@ -603,10 +603,10 @@ const { PDFDocument, degrees } = PDFLib;
           return state;
         }
 
-        // ---------- DIVIDIR PDF ----------
+        // ---------- EXTRAIR PÁGINAS ----------
         RENDERERS.split = function (container) {
           container.innerHTML =
-            '<h2>✂️ Dividir PDF</h2><p class="hint">Selecione as páginas que você quer extrair para um novo PDF.</p>';
+            '<h2>✂️ Extrair páginas</h2><p class="hint">Selecione as páginas que você quer extrair para um novo PDF.</p>';
           let fileBuffer = null;
 
           makeDropzone(
