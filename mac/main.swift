@@ -75,7 +75,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let windowMenu = NSMenu(title: "Janela")
         windowMenuItem.submenu = windowMenu
         windowMenu.addItem(withTitle: "Minimizar", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
-        windowMenu.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
         windowMenu.addItem(NSMenuItem.separator())
         windowMenu.addItem(withTitle: "Fechar", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
     }
@@ -108,15 +107,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
 
     // MARK: - Window Setup
     private func setupWindow() {
-        let rect = NSRect(x: 0, y: 0, width: 1180, height: 800)
+        let rect = NSRect(x: 0, y: 0, width: 960, height: 580)
         window = NSWindow(
             contentRect: rect,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
         window.center()
-        window.minSize = NSSize(width: 860, height: 580)
+        window.minSize = NSSize(width: 960, height: 580)
+        window.maxSize = NSSize(width: 960, height: 580)
         window.title = "PDF Tool"
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
