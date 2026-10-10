@@ -366,7 +366,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 }
             }
 
-            savePanel.beginSheetModal(for: self.window) { response in
+            let finishSave: (NSApplication.ModalResponse) -> Void = { response in
                 if response == .OK, let targetURL = savePanel.url {
                     UserDefaults.standard.set(targetURL.deletingLastPathComponent().path, forKey: "lastChosenDirectoryPath")
                     do {
@@ -388,6 +388,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                     self.webView.evaluateJavaScript(js, completionHandler: nil)
                 }
             }
+
+            if let win = self.window, win.attachedSheet == nil {
+                savePanel.beginSheetModal(for: win, completionHandler: finishSave)
+            } else {
+                savePanel.begin(completionHandler: finishSave)
+            }
         }
     }
 
@@ -407,7 +413,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 openPanel.directoryURL = URL(fileURLWithPath: lastPath)
             }
 
-            openPanel.beginSheetModal(for: self.window) { response in
+            let finishBatch: (NSApplication.ModalResponse) -> Void = { response in
                 if response == .OK, let folderURL = openPanel.url {
                     UserDefaults.standard.set(folderURL.path, forKey: "lastChosenDirectoryPath")
                     var savedCount = 0
@@ -437,6 +443,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                     self.webView.evaluateJavaScript(js, completionHandler: nil)
                 }
             }
+
+            if let win = self.window, win.attachedSheet == nil {
+                openPanel.beginSheetModal(for: win, completionHandler: finishBatch)
+            } else {
+                openPanel.begin(completionHandler: finishBatch)
+            }
         }
     }
 
@@ -463,7 +475,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
             }
         }
 
-        if let win = self.window {
+        if let win = self.window, win.attachedSheet == nil {
             openPanel.beginSheetModal(for: win, completionHandler: finishHandler)
         } else {
             openPanel.begin(completionHandler: finishHandler)

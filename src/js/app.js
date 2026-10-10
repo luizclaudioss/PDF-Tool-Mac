@@ -108,14 +108,17 @@ const { PDFDocument, degrees } = PDFLib;
           input.accept = accept || "application/pdf";
           dz.appendChild(input);
 
-          input.addEventListener("click", (e) => {
-            e.stopPropagation();
-          });
-
           input.addEventListener("change", () => {
             if (input.files && input.files.length > 0) {
-              onFiles(Array.from(input.files));
+              const selected = Array.from(input.files);
+              input.value = "";
+              onFiles(selected);
             }
+          });
+
+          dz.addEventListener("click", () => {
+            input.value = "";
+            input.click();
           });
 
           dz.addEventListener("dragover", (e) => {
@@ -128,7 +131,8 @@ const { PDFDocument, degrees } = PDFLib;
           dz.addEventListener("drop", (e) => {
             e.preventDefault();
             dz.classList.remove("dragover");
-            if (e.dataTransfer && e.dataTransfer.files) {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              input.value = "";
               onFiles(Array.from(e.dataTransfer.files));
             }
           });
@@ -322,7 +326,7 @@ const { PDFDocument, degrees } = PDFLib;
             const decryptedBuffer = await requestPdfPasswordModal(file.name, buf);
             if (!decryptedBuffer) {
               if (statusEl) {
-                setStatus(statusEl, "Desbloqueio cancelado pelo usuário.", "");
+                setStatus(statusEl, "Desbloqueio cancelado. Selecione ou arraste um arquivo para tentar novamente.", "");
               }
               return null;
             }
@@ -845,6 +849,47 @@ const { PDFDocument, degrees } = PDFLib;
           let fileBuffer = null;
           let currentFileName = "";
 
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
+          const thumbArea = document.createElement("div");
+
+          const btn = document.createElement("button");
+          btn.className = "action-btn";
+          btn.textContent = "Extrair e Baixar PDF";
+          btn.disabled = true;
+
+          const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFileName = "";
+            fileBarWrap.innerHTML = "";
+            thumbArea.innerHTML = "";
+            btn.disabled = true;
+            btn.onclick = null;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ✕ Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) {
+              clearBtn.addEventListener("click", () => clearActiveFile());
+            }
+          }
+
           makeDropzone(
             container,
             { label: "o PDF" },
@@ -866,6 +911,7 @@ const { PDFDocument, degrees } = PDFLib;
                     onProgress: (cur, tot) => setStatus(status, `Carregando miniaturas (${cur} de ${tot})...`, "")
                   },
                 );
+                renderLoadedBar(currentFileName, state.numPages);
               } catch (err) {
                 setStatus(status, "⚠️ " + err.message, "error");
                 return;
@@ -926,16 +972,10 @@ const { PDFDocument, degrees } = PDFLib;
             },
           );
 
-          const thumbArea = document.createElement("div");
+          container.appendChild(fileBarWrap);
           container.appendChild(thumbArea);
-
-          const btn = document.createElement("button");
-          btn.className = "action-btn";
-          btn.textContent = "Extrair e Baixar PDF";
-          btn.disabled = true;
           container.appendChild(btn);
-
-          const status = statusEl(container);
+          container.appendChild(status);
         };
 
         // ---------- REMOVER PÁGINAS ----------
@@ -946,6 +986,9 @@ const { PDFDocument, degrees } = PDFLib;
           let currentFileName = "";
           let pages = [];
 
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
           const thumbsArea = document.createElement("div");
           thumbsArea.className = "thumbs";
 
@@ -955,6 +998,35 @@ const { PDFDocument, degrees } = PDFLib;
           btn.disabled = true;
 
           const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFileName = "";
+            pages = [];
+            fileBarWrap.innerHTML = "";
+            thumbsArea.innerHTML = "";
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ✕ Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) {
+              clearBtn.addEventListener("click", () => clearActiveFile());
+            }
+          }
 
           makeDropzone(
             container,
@@ -994,6 +1066,7 @@ const { PDFDocument, degrees } = PDFLib;
                   });
                 }
 
+                renderLoadedBar(currentFileName, pdf.numPages);
                 renderPages();
                 btn.disabled = false;
               } catch (err) {
@@ -1006,8 +1079,10 @@ const { PDFDocument, degrees } = PDFLib;
             },
           );
 
+          container.appendChild(fileBarWrap);
           container.appendChild(thumbsArea);
           container.appendChild(btn);
+          container.appendChild(status);
 
           function renderPages() {
             thumbsArea.innerHTML = "";
@@ -1161,43 +1236,10 @@ const { PDFDocument, degrees } = PDFLib;
           let currentFileName = "";
           let currentState = null;
 
-          makeDropzone(
-            container,
-            { label: "o PDF" },
-            async (newFiles) => {
-              if (!newFiles[0]) return;
-              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
-              if (!unlocked) return;
-              currentFileName = unlocked.file.name;
-              fileBuffer = unlocked.buffer;
-              thumbArea.innerHTML = "";
-              setStatus(status, "Carregando páginas...", "");
-              try {
-                currentState = await renderThumbs(
-                  thumbArea,
-                  fileBuffer,
-                  {
-                    selectable: false,
-                    onProgress: (cur, tot) => setStatus(status, `Carregando miniaturas (${cur} de ${tot})...`, "")
-                  },
-                );
-              } catch (err) {
-                setStatus(status, "⚠️ " + err.message, "error");
-                return;
-              }
-              setStatus(
-                status,
-                "Clique no botão ⟳ em cada página ou use os botões abaixo para girar todas.",
-                "",
-              );
-              btnRotateAllRight.disabled = false;
-              btnRotateAllLeft.disabled = false;
-              btn.disabled = false;
-            },
-          );
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
 
           const thumbArea = document.createElement("div");
-          container.appendChild(thumbArea);
 
           const btnBar = document.createElement("div");
           btnBar.style.display = "flex";
@@ -1302,9 +1344,80 @@ const { PDFDocument, degrees } = PDFLib;
           btnBar.appendChild(btnRotateAllRight);
           btnBar.appendChild(btnRotateAllLeft);
           btnBar.appendChild(btn);
-          container.appendChild(btnBar);
 
           const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFileName = "";
+            currentState = null;
+            fileBarWrap.innerHTML = "";
+            thumbArea.innerHTML = "";
+            btnRotateAllRight.disabled = true;
+            btnRotateAllLeft.disabled = true;
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ✕ Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) {
+              clearBtn.addEventListener("click", () => clearActiveFile());
+            }
+          }
+
+          makeDropzone(
+            container,
+            { label: "o PDF" },
+            async (newFiles) => {
+              if (!newFiles[0]) return;
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFileName = unlocked.file.name;
+              fileBuffer = unlocked.buffer;
+              thumbArea.innerHTML = "";
+              setStatus(status, "Carregando páginas...", "");
+              try {
+                currentState = await renderThumbs(
+                  thumbArea,
+                  fileBuffer,
+                  {
+                    selectable: false,
+                    onProgress: (cur, tot) => setStatus(status, `Carregando miniaturas (${cur} de ${tot})...`, "")
+                  },
+                );
+                renderLoadedBar(currentFileName, currentState.numPages);
+              } catch (err) {
+                setStatus(status, "⚠️ " + err.message, "error");
+                return;
+              }
+              setStatus(
+                status,
+                "Clique no botão ⟳ em cada página ou use os botões abaixo para girar todas.",
+                "",
+              );
+              btnRotateAllRight.disabled = false;
+              btnRotateAllLeft.disabled = false;
+              btn.disabled = false;
+            },
+          );
+
+          container.appendChild(fileBarWrap);
+          container.appendChild(thumbArea);
+          container.appendChild(btnBar);
+          container.appendChild(status);
         };
 
         // ---------- PDF PARA JPG ----------
@@ -1324,8 +1437,36 @@ const { PDFDocument, degrees } = PDFLib;
                     `;
           container.appendChild(selectionStyle);
 
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
           const resultArea = document.createElement("div");
           const status = statusEl(container);
+
+          function clearActiveFile() {
+            fileBarWrap.innerHTML = "";
+            resultArea.innerHTML = "";
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, totalPages) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${totalPages} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ✕ Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) {
+              clearBtn.addEventListener("click", () => clearActiveFile());
+            }
+          }
 
           makeDropzone(
             container,
@@ -1339,6 +1480,7 @@ const { PDFDocument, degrees } = PDFLib;
               setStatus(status, "Carregando páginas...", "");
               try {
                 const pdf = await pdfjsLib.getDocument({ data: buffer.slice(0) }).promise;
+                renderLoadedBar(file.name, pdf.numPages);
 
                 const toolbar = document.createElement("div");
                 toolbar.className = "pdf2jpg-toolbar";
@@ -1487,7 +1629,9 @@ const { PDFDocument, degrees } = PDFLib;
               }
             },
           );
+          container.appendChild(fileBarWrap);
           container.appendChild(resultArea);
+          container.appendChild(status);
         };
 
         // ---------- JPG PARA PDF ----------
