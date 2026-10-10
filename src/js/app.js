@@ -286,6 +286,28 @@ const { PDFDocument, degrees } = PDFLib;
           };
         }
 
+        // Converte coordenadas visuais (origem no topo esquerdo da página exibida)
+        // para coordenadas nativas do PDF (origem na base inferior esquerda e considerando rotação).
+        function convertVisualToPdf(vx, vy, width, height, rotation = 0) {
+          const normRot = ((rotation % 360) + 360) % 360;
+          if (normRot === 0) return { x: vx, y: height - vy };
+          if (normRot === 90) return { x: vy, y: vx };
+          if (normRot === 180) return { x: width - vx, y: vy };
+          if (normRot === 270) return { x: width - vy, y: height - vx };
+          return { x: vx, y: height - vy };
+        }
+
+        // Retorna dimensões visuais da página (largura e altura como exibidas na tela)
+        function getPageVisualDimensions(width, height, rotation = 0) {
+          const normRot = ((rotation % 360) + 360) % 360;
+          const isRotated = normRot === 90 || normRot === 270;
+          return {
+            visualWidth: isRotated ? height : width,
+            visualHeight: isRotated ? width : height,
+            rotation: normRot,
+          };
+        }
+
         function getBaseFilename(filename, fallback = "documento") {
           if (!filename) return fallback;
           const dot = filename.lastIndexOf(".");
@@ -3048,39 +3070,48 @@ const { PDFDocument, degrees } = PDFLib;
               pages.forEach((page, idx) => {
                 const { width, height } = page.getSize();
                 const curPageNum = idx + 1;
+                const { visualWidth, visualHeight, rotation } = getPageVisualDimensions(
+                  width,
+                  height,
+                  page.getRotation().angle
+                );
 
                 if (wmEnable && wmText) {
-                  const fontSize = Math.max(28, Math.round(width / 11));
+                  const fontSize = Math.max(28, Math.round(visualWidth / 11));
                   const textWidth = fontBold.widthOfTextAtSize(wmText, fontSize);
                   const isDiag = wmOrient === "diagonal";
                   const rgb = hexToRgb(selectedColor);
                   const pdfColor = PDFLib.rgb(rgb.r / 255, rgb.g / 255, rgb.b / 255);
 
-                  if (isDiag) {
-                    const angleRad = Math.PI / 4;
-                    const x = width / 2 - (textWidth / 2) * Math.cos(angleRad);
-                    const y = height / 2 - (textWidth / 2) * Math.sin(angleRad);
-                    page.drawText(wmText, {
-                      x,
-                      y,
-                      size: fontSize,
-                      font: fontBold,
-                      color: pdfColor,
-                      opacity: wmOpacity,
-                      rotate: degrees(45),
-                    });
-                  } else {
-                    const x = (width - textWidth) / 2;
-                    const y = height / 2 - fontSize / 2;
-                    page.drawText(wmText, {
-                      x,
-                      y,
-                      size: fontSize,
-                      font: fontBold,
-                      color: pdfColor,
-                      opacity: wmOpacity,
-                    });
-                  }
+                  // Ângulo visual: 45° se diagonal, 0° se horizontal
+                  const visualAngle = isDiag ? 45 : 0;
+                  // Ajusta o ângulo para o sistema de coordenadas do PDF respeitando a rotação da página
+                  const pdfAngle = (visualAngle + rotation) % 360;
+                  const rad = (pdfAngle * Math.PI) / 180;
+
+                  // O centro da página no PDF é sempre (width / 2, height / 2)
+                  const cx = width / 2;
+                  const cy = height / 2;
+
+                  // Deslocamento do ponto âncora até o centro do texto
+                  const offX = textWidth / 2;
+                  const offY = fontSize * 0.35;
+
+                  const dx = offX * Math.cos(rad) - offY * Math.sin(rad);
+                  const dy = offX * Math.sin(rad) + offY * Math.cos(rad);
+
+                  const x = cx - dx;
+                  const y = cy - dy;
+
+                  page.drawText(wmText, {
+                    x,
+                    y,
+                    size: fontSize,
+                    font: fontBold,
+                    color: pdfColor,
+                    opacity: wmOpacity,
+                    rotate: degrees(pdfAngle),
+                  });
                 }
 
                 if (numEnable) {
@@ -3091,18 +3122,21 @@ const { PDFDocument, degrees } = PDFLib;
 
                   const numSize = 10;
                   const numWidth = font.widthOfTextAtSize(label, numSize);
-                  let x = (width - numWidth) / 2;
-                  let y = 24;
+                  let vx = (visualWidth - numWidth) / 2;
+                  let vy = visualHeight - 24;
 
                   if (pos === "bottom-right") {
-                    x = width - numWidth - 36;
-                    y = 24;
+                    vx = visualWidth - numWidth - 36;
+                    vy = visualHeight - 24;
                   } else if (pos === "top-center") {
-                    y = height - 32;
+                    vx = (visualWidth - numWidth) / 2;
+                    vy = 32;
                   } else if (pos === "top-right") {
-                    x = width - numWidth - 36;
-                    y = height - 32;
+                    vx = visualWidth - numWidth - 36;
+                    vy = 32;
                   }
+
+                  const { x, y } = convertVisualToPdf(vx, vy, width, height, rotation);
 
                   page.drawText(label, {
                     x,
@@ -3110,6 +3144,7 @@ const { PDFDocument, degrees } = PDFLib;
                     size: numSize,
                     font: font,
                     color: PDFLib.rgb(0.3, 0.3, 0.3),
+                    rotate: degrees(rotation),
                   });
                 }
               });
@@ -3599,18 +3634,26 @@ const { PDFDocument, degrees } = PDFLib;
               const targetPageIdx = currentPageNum - 1;
               const page = doc.getPage(targetPageIdx);
               const { width, height } = page.getSize();
+              const { visualWidth, visualHeight, rotation } = getPageVisualDimensions(
+                width,
+                height,
+                page.getRotation().angle
+              );
 
-              const pdfWidth = sigRelWidth * width;
-              const pdfHeight = sigRelHeight * height;
-              const pdfX = sigRelX * width;
-              // No sistema de coordenadas do PDF, Y = 0 fica na borda inferior
-              const pdfY = height - (sigRelY * height) - pdfHeight;
+              const vw = sigRelWidth * visualWidth;
+              const vh = sigRelHeight * visualHeight;
+              const vx = sigRelX * visualWidth;
+              const vy = sigRelY * visualHeight;
+
+              // Em pdf-lib com rotação, o ponto âncora (x, y) de drawImage corresponde ao canto inferior esquerdo visual
+              const anchor = convertVisualToPdf(vx, vy + vh, width, height, rotation);
 
               page.drawImage(embeddedSig, {
-                x: pdfX,
-                y: pdfY,
-                width: pdfWidth,
-                height: pdfHeight,
+                x: anchor.x,
+                y: anchor.y,
+                width: vw,
+                height: vh,
+                rotate: degrees(rotation),
               });
 
               const outBytes = await doc.save();
@@ -4006,18 +4049,26 @@ const { PDFDocument, degrees } = PDFLib;
 
                 const p = pages[pIdx];
                 const { width, height } = p.getSize();
+                const { visualWidth, visualHeight, rotation } = getPageVisualDimensions(
+                  width,
+                  height,
+                  p.getRotation().angle
+                );
 
                 for (const b of boxes) {
-                  const pdfX = b.xPct * width;
-                  const pdfW = b.wPct * width;
-                  const pdfH = b.hPct * height;
-                  const pdfY = height - (b.yPct * height) - pdfH;
+                  const vx = b.xPct * visualWidth;
+                  const vy = b.yPct * visualHeight;
+                  const vw = b.wPct * visualWidth;
+                  const vh = b.hPct * visualHeight;
+
+                  const anchor = convertVisualToPdf(vx, vy + vh, width, height, rotation);
 
                   p.drawRectangle({
-                    x: pdfX,
-                    y: pdfY,
-                    width: pdfW,
-                    height: pdfH,
+                    x: anchor.x,
+                    y: anchor.y,
+                    width: vw,
+                    height: vh,
+                    rotate: degrees(rotation),
                     color: rgb(0, 0, 0)
                   });
                 }
@@ -4294,35 +4345,51 @@ const { PDFDocument, degrees } = PDFLib;
 
                 const p = pages[pIdx];
                 const { width, height } = p.getSize();
+                const { visualWidth, visualHeight, rotation } = getPageVisualDimensions(
+                  width,
+                  height,
+                  p.getRotation().angle
+                );
 
                 for (const it of items) {
                   const fontSize = it.type === "stamp" ? 16 : 13;
                   const textWidth = font.widthOfTextAtSize(it.text, fontSize);
                   const textHeight = font.heightAtSize(fontSize);
 
-                  const pdfX = it.xPct * width;
-                  const pdfY = height - (it.yPct * height) - textHeight;
+                  const vx = it.xPct * visualWidth;
+                  const vy = it.yPct * visualHeight;
                   const rgbCol = hexToRgb(it.colorHex);
 
                   if (it.type === "stamp") {
+                    const stampVx = vx - 8;
+                    const stampVy = vy - 5;
+                    const stampVw = textWidth + 16;
+                    const stampVh = textHeight + 10;
+                    const anchorRect = convertVisualToPdf(stampVx, stampVy + stampVh, width, height, rotation);
+
                     p.drawRectangle({
-                      x: pdfX - 8,
-                      y: pdfY - 5,
-                      width: textWidth + 16,
-                      height: textHeight + 10,
+                      x: anchorRect.x,
+                      y: anchorRect.y,
+                      width: stampVw,
+                      height: stampVh,
                       borderColor: rgb(rgbCol.r / 255, rgbCol.g / 255, rgbCol.b / 255),
                       borderWidth: 2,
                       color: rgb(1, 1, 1),
-                      opacity: 0.85
+                      opacity: 0.85,
+                      rotate: degrees(rotation),
                     });
                   }
 
+                  // Linha de base do texto em coordenadas visuais
+                  const anchorText = convertVisualToPdf(vx, vy + textHeight, width, height, rotation);
+
                   p.drawText(it.text, {
-                    x: pdfX,
-                    y: pdfY,
+                    x: anchorText.x,
+                    y: anchorText.y,
                     size: fontSize,
                     font: font,
-                    color: rgb(rgbCol.r / 255, rgbCol.g / 255, rgbCol.b / 255)
+                    color: rgb(rgbCol.r / 255, rgbCol.g / 255, rgbCol.b / 255),
+                    rotate: degrees(rotation),
                   });
                 }
               }
