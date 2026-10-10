@@ -259,6 +259,7 @@ p.subtitle {
   line-height: 1.32;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1724,7 +1725,10 @@ p.subtitle {
   background: #f1f5f9;
 }
 
-:root[data-theme="dark"] .quick-look-body,
+:root[data-theme="dark"] .quick-look-body {
+  background: #0f172a;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .quick-look-body {
     background: #0f172a;
