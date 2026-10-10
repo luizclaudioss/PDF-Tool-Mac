@@ -126,6 +126,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let contentController = WKUserContentController()
         contentController.add(self, name: "nativeSave")
         contentController.add(self, name: "nativeSaveBatch")
+        contentController.add(self, name: "nativeOpenFile")
+        contentController.add(self, name: "nativeRevealFile")
         config.userContentController = contentController
         
         // Habilitar suporte a inspecionar se necessário
@@ -184,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         }
     }
 
-    // MARK: - WKScriptMessageHandler (Native Save As Dialogs)
+    // MARK: - WKScriptMessageHandler (Native Save As Dialogs & Open File)
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "nativeSave" {
             guard let dict = message.body as? [String: Any],
@@ -200,6 +202,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 return
             }
             handleBatchSave(files: files)
+        } else if message.name == "nativeOpenFile" {
+            guard let dict = message.body as? [String: Any],
+                  let path = dict["path"] as? String else {
+                return
+            }
+            let fileURL = URL(fileURLWithPath: path)
+            NSWorkspace.shared.open(fileURL)
+        } else if message.name == "nativeRevealFile" {
+            guard let dict = message.body as? [String: Any],
+                  let path = dict["path"] as? String else {
+                return
+            }
+            let fileURL = URL(fileURLWithPath: path)
+            NSWorkspace.shared.activateFileViewerSelecting([fileURL])
         }
     }
 
@@ -229,13 +245,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                 if response == .OK, let targetURL = savePanel.url {
                     do {
                         try data.write(to: targetURL)
-                        let escaped = targetURL.lastPathComponent.replacingOccurrences(of: "'", with: "\\'")
-                        let js = "window.onNativeSaveSuccess && window.onNativeSaveSuccess('\(escaped)');"
+                        let escapedName = targetURL.lastPathComponent
+                            .replacingOccurrences(of: "\\", with: "\\\\")
+                            .replacingOccurrences(of: "'", with: "\\'")
+                        let escapedPath = targetURL.path
+                            .replacingOccurrences(of: "\\", with: "\\\\")
+                            .replacingOccurrences(of: "'", with: "\\'")
+                        let js = "window.onNativeSaveSuccess && window.onNativeSaveSuccess('\(escapedName)', '\(escapedPath)');"
                         self.webView.evaluateJavaScript(js, completionHandler: nil)
                     } catch {
                         let alert = NSAlert(error: error)
                         alert.runModal()
                     }
+                } else {
+                    let js = "window.onNativeSaveCancelled && window.onNativeSaveCancelled();"
+                    self.webView.evaluateJavaScript(js, completionHandler: nil)
                 }
             }
         }
@@ -268,8 +292,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
                             }
                         }
                     }
-                    let escapedFolder = folderURL.lastPathComponent.replacingOccurrences(of: "'", with: "\\'")
-                    let js = "window.onNativeBatchSaveSuccess && window.onNativeBatchSaveSuccess(\(savedCount), '\(escapedFolder)');"
+                    let escapedFolder = folderURL.lastPathComponent
+                        .replacingOccurrences(of: "\\", with: "\\\\")
+                        .replacingOccurrences(of: "'", with: "\\'")
+                    let escapedPath = folderURL.path
+                        .replacingOccurrences(of: "\\", with: "\\\\")
+                        .replacingOccurrences(of: "'", with: "\\'")
+                    let js = "window.onNativeBatchSaveSuccess && window.onNativeBatchSaveSuccess(\(savedCount), '\(escapedFolder)', '\(escapedPath)');"
+                    self.webView.evaluateJavaScript(js, completionHandler: nil)
+                } else {
+                    let js = "window.onNativeSaveCancelled && window.onNativeSaveCancelled();"
                     self.webView.evaluateJavaScript(js, completionHandler: nil)
                 }
             }

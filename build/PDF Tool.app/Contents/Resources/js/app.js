@@ -55,6 +55,8 @@ const { PDFDocument, degrees } = PDFLib;
         renderHome();
 
         function goHome() {
+          currentActiveStatusEl = null;
+          currentSaveBtn = null;
           document.getElementById("home-screen").style.display =
             "block";
           document
@@ -157,6 +159,149 @@ const { PDFDocument, degrees } = PDFLib;
           });
         }
 
+        // Estado e controle de salvamento nativo macOS
+        let currentActiveStatusEl = null;
+        let currentSaveBtn = null;
+
+        function prepareSaveAction(statusEl, btn) {
+          currentActiveStatusEl = statusEl;
+          currentSaveBtn = btn;
+        }
+
+        function openNativeFile(path) {
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeOpenFile) {
+            window.webkit.messageHandlers.nativeOpenFile.postMessage({ path: path });
+          }
+        }
+
+        function revealNativeFile(path) {
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeRevealFile) {
+            window.webkit.messageHandlers.nativeRevealFile.postMessage({ path: path });
+          }
+        }
+
+        function renderSavedFileSuccess({ filename, fullPath, isFolder, count, container }) {
+          const targetContainer = container || currentActiveStatusEl;
+          if (targetContainer) {
+            targetContainer.innerHTML = "";
+            targetContainer.className = "status-container";
+
+            const box = document.createElement("div");
+            box.className = "saved-file-box";
+
+            const meta = document.createElement("div");
+            meta.className = "saved-file-meta";
+
+            const badge = document.createElement("div");
+            badge.className = "saved-file-badge";
+            badge.textContent = "✓";
+            meta.appendChild(badge);
+
+            const textWrap = document.createElement("div");
+            textWrap.className = "saved-file-text";
+
+            const statusTitle = document.createElement("div");
+            statusTitle.className = "saved-file-status";
+            statusTitle.textContent = isFolder
+              ? `✓ ${count || "Arquivos"} imagens salvas com sucesso!`
+              : "✓ Arquivo salvo com sucesso!";
+            textWrap.appendChild(statusTitle);
+
+            const pathLabel = document.createElement("div");
+            pathLabel.className = "saved-file-path";
+            pathLabel.textContent = filename || (fullPath ? fullPath.split("/").pop() : "");
+            pathLabel.title = fullPath || filename;
+            textWrap.appendChild(pathLabel);
+
+            meta.appendChild(textWrap);
+            box.appendChild(meta);
+
+            const btns = document.createElement("div");
+            btns.className = "saved-file-buttons";
+
+            if (!isFolder && fullPath) {
+              const openBtn = document.createElement("button");
+              openBtn.className = "btn-open-file";
+              openBtn.innerHTML = "<span>👁️</span> Abrir Arquivo";
+              openBtn.onclick = () => openNativeFile(fullPath);
+              btns.appendChild(openBtn);
+            }
+
+            if (fullPath) {
+              const revealBtn = document.createElement("button");
+              revealBtn.className = "btn-reveal-file";
+              revealBtn.innerHTML = `<span>📂</span> ${isFolder ? "Abrir Pasta" : "Mostrar no Finder"}`;
+              revealBtn.onclick = () => revealNativeFile(fullPath);
+              btns.appendChild(revealBtn);
+            }
+
+            box.appendChild(btns);
+            targetContainer.appendChild(box);
+          }
+
+          // Notificação flutuante (Toast)
+          const toast = document.getElementById("save-toast");
+          if (toast) {
+            toast.innerHTML = "";
+
+            const meta = document.createElement("div");
+            meta.className = "saved-file-meta";
+
+            const badge = document.createElement("div");
+            badge.className = "saved-file-badge";
+            badge.textContent = "✓";
+            meta.appendChild(badge);
+
+            const textWrap = document.createElement("div");
+            textWrap.className = "saved-file-text";
+
+            const statusTitle = document.createElement("div");
+            statusTitle.className = "saved-file-status";
+            statusTitle.textContent = isFolder ? "Salvo com sucesso!" : "Arquivo salvo!";
+            textWrap.appendChild(statusTitle);
+
+            const pathLabel = document.createElement("div");
+            pathLabel.className = "saved-file-path";
+            pathLabel.textContent = filename;
+            textWrap.appendChild(pathLabel);
+            meta.appendChild(textWrap);
+            toast.appendChild(meta);
+
+            const btns = document.createElement("div");
+            btns.className = "saved-file-buttons";
+
+            if (!isFolder && fullPath) {
+              const openBtn = document.createElement("button");
+              openBtn.className = "btn-open-file";
+              openBtn.innerHTML = "<span>👁️</span> Abrir";
+              openBtn.onclick = () => openNativeFile(fullPath);
+              btns.appendChild(openBtn);
+            }
+
+            if (fullPath) {
+              const revealBtn = document.createElement("button");
+              revealBtn.className = "btn-reveal-file";
+              revealBtn.innerHTML = `<span>📂</span> ${isFolder ? "Pasta" : "Finder"}`;
+              revealBtn.onclick = () => revealNativeFile(fullPath);
+              btns.appendChild(revealBtn);
+            }
+
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "toast-close-btn";
+            closeBtn.textContent = "×";
+            closeBtn.onclick = () => toast.classList.add("hidden");
+            btns.appendChild(closeBtn);
+
+            toast.appendChild(btns);
+            toast.classList.remove("hidden");
+
+            clearTimeout(toast.hideTimeout);
+            toast.hideTimeout = setTimeout(() => {
+              toast.classList.add("hidden");
+            }, 18000);
+          }
+        }
+
         async function triggerDownload(blob, filename) {
           if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeSave) {
             try {
@@ -178,6 +323,9 @@ const { PDFDocument, degrees } = PDFLib;
           a.click();
           document.body.removeChild(a);
           setTimeout(() => URL.revokeObjectURL(url), 3000);
+          if (currentActiveStatusEl) {
+            renderSavedFileSuccess({ filename, fullPath: null, isFolder: false });
+          }
         }
 
         async function triggerBatchDownload(files) {
@@ -517,16 +665,12 @@ const { PDFDocument, degrees } = PDFLib;
               const blob = new Blob([outBytes], {
                 type: "application/pdf",
               });
-              triggerDownload(blob, "unido.pdf");
-              setStatus(
-                status,
-                `✓ ${files.length} arquivos combinados e baixados com sucesso!`,
-                "success",
-              );
+              prepareSaveAction(status, btn);
+              await triggerDownload(blob, "unido.pdf");
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
+              btn.disabled = false;
             }
-            btn.disabled = false;
           });
         };
 
@@ -664,16 +808,12 @@ const { PDFDocument, degrees } = PDFLib;
                   const blob = new Blob([bytes], {
                     type: "application/pdf",
                   });
-                  triggerDownload(blob, "extraido.pdf");
-                  setStatus(
-                    status,
-                    `✓ ${sortedPages.length} página(s) extraída(s) e baixada(s) com sucesso!`,
-                    "success",
-                  );
+                  prepareSaveAction(status, btn);
+                  await triggerDownload(blob, "extraido.pdf");
                 } catch (err) {
                   setStatus(status, "Erro: " + err.message, "error");
+                  btn.disabled = false;
                 }
-                btn.disabled = false;
               };
             },
           );
@@ -887,25 +1027,12 @@ const { PDFDocument, degrees } = PDFLib;
               const blob = new Blob([bytes], {
                 type: "application/pdf",
               });
-              triggerDownload(blob, "sem_paginas.pdf");
-
-              if (removedPages.length > 0) {
-                setStatus(
-                  status,
-                  `✓ ${removedPages.length} página(s) removida(s) e PDF baixado com sucesso!`,
-                  "success",
-                );
-              } else {
-                setStatus(
-                  status,
-                  `✓ PDF baixado com sucesso (${activePages.length} páginas)!`,
-                  "success",
-                );
-              }
+              prepareSaveAction(status, btn);
+              await triggerDownload(blob, "sem_paginas.pdf");
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
+              btn.disabled = false;
             }
-            btn.disabled = false;
           };
         };
 
@@ -1029,18 +1156,14 @@ const { PDFDocument, degrees } = PDFLib;
               const blob = new Blob([bytes], {
                 type: "application/pdf",
               });
-              triggerDownload(blob, "rotacionado.pdf");
-              setStatus(
-                status,
-                "✓ PDF rotacionado e baixado com sucesso!",
-                "success",
-              );
+              prepareSaveAction(status, btn);
+              await triggerDownload(blob, "rotacionado.pdf");
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
+              btn.disabled = false;
+              btnRotateAllRight.disabled = false;
+              btnRotateAllLeft.disabled = false;
             }
-            btn.disabled = false;
-            btnRotateAllRight.disabled = false;
-            btnRotateAllLeft.disabled = false;
           };
 
           btnBar.appendChild(btnRotateAllRight);
@@ -1210,16 +1333,16 @@ const { PDFDocument, degrees } = PDFLib;
                       );
                       exportFiles.push({ blob, filename: `pagina-${i}.jpg` });
                     }
+                    prepareSaveAction(status, dlBtn);
                     if (exportFiles.length === 1) {
                       await triggerDownload(exportFiles[0].blob, exportFiles[0].filename);
                     } else {
                       await triggerBatchDownload(exportFiles);
                     }
-                    setStatus(status, `✓ ${pages.length} imagem(ns) baixada(s) com sucesso!`, "success");
                   } catch (err) {
                     setStatus(status, "Erro: " + err.message, "error");
+                    dlBtn.disabled = false;
                   }
-                  dlBtn.disabled = false;
                 });
               } catch (err) {
                 setStatus(status, "Erro: " + err.message, "error");
@@ -1482,19 +1605,13 @@ const { PDFDocument, degrees } = PDFLib;
                 type: "application/pdf",
               });
 
-              // Download automático e imediato, sem botão duplicado e sem pré-visualização
-              const url = URL.createObjectURL(blob);
+              // Download automático e imediato
+              prepareSaveAction(status, btn);
               await triggerDownload(blob, "imagens.pdf");
-
-              setStatus(
-                status,
-                "✓ PDF gerado e baixado com sucesso!",
-                "success",
-              );
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
+              btn.disabled = false;
             }
-            btn.disabled = false;
           });
         };
 // Prevenir comportamento padrao do navegador ao arrastar arquivos na janela
@@ -1502,9 +1619,19 @@ window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => e.preventDefault());
 
 // Callbacks nativos do macOS
-window.onNativeSaveSuccess = function (filename) {
-  console.log("Arquivo salvo com sucesso:", filename);
+window.onNativeSaveSuccess = function (filename, fullPath) {
+  if (currentSaveBtn) currentSaveBtn.disabled = false;
+  renderSavedFileSuccess({ filename, fullPath, isFolder: false });
 };
-window.onNativeBatchSaveSuccess = function (count, folderName) {
-  console.log(`${count} imagens salvas com sucesso em: ${folderName}`);
+
+window.onNativeBatchSaveSuccess = function (count, folderName, fullPath) {
+  if (currentSaveBtn) currentSaveBtn.disabled = false;
+  renderSavedFileSuccess({ filename: folderName, fullPath, isFolder: true, count });
+};
+
+window.onNativeSaveCancelled = function () {
+  if (currentSaveBtn) currentSaveBtn.disabled = false;
+  if (currentActiveStatusEl) {
+    setStatus(currentActiveStatusEl, "Operação cancelada.", "");
+  }
 };
