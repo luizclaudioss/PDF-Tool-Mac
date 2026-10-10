@@ -137,9 +137,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
     }
 
     @objc private func showAbout() {
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? "PDF Tool"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let copyright = Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
+
         let alert = NSAlert()
-        alert.messageText = "PDF Tool para macOS"
-        alert.informativeText = "Versão 1.0.0 • Edição Nativa\n\nFerramenta integrada de manipulação e organização de PDFs.\nFunciona 100% offline com segurança total para seus documentos."
+        alert.messageText = "\(appName) para macOS"
+        var details = "Versão \(version) • Edição Nativa\n\nFerramenta integrada de manipulação e organização de PDFs.\nFunciona 100% offline com segurança total para seus documentos."
+        if !copyright.isEmpty {
+            details += "\n\n\(copyright)"
+        }
+        alert.informativeText = details
         alert.alertStyle = .informational
         alert.runModal()
     }
