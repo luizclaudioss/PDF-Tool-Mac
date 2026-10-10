@@ -111,15 +111,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let rect = NSRect(x: 0, y: 0, width: 1180, height: 800)
         window = NSWindow(
             contentRect: rect,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.center()
         window.minSize = NSSize(width: 860, height: 580)
         window.title = "PDF Tool"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
 
         // WKWebView Configuration
