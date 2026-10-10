@@ -307,7 +307,21 @@ const { PDFDocument, degrees } = PDFLib;
           });
         }
 
+        // Cache de arquivos desbloqueados nesta sessão (evita pedir senha novamente caso o usuário importe o mesmo arquivo em outra ferramenta)
+        const unlockedFilesCache = new Map();
+
+        function getFileCacheKey(file) {
+          return `${file.name}_${file.size}_${file.lastModified}`;
+        }
+
         async function ensurePdfFileUnlocked(file, statusEl) {
+          const cacheKey = getFileCacheKey(file);
+          if (unlockedFilesCache.has(cacheKey)) {
+            const cached = unlockedFilesCache.get(cacheKey);
+            if (statusEl) setStatus(statusEl, "");
+            return { file: cached.file, buffer: cached.buffer.slice(0) };
+          }
+
           let buf = await readAsArrayBuffer(file);
           try {
             const testTask = pdfjsLib.getDocument({ data: buf.slice(0) });
@@ -331,8 +345,14 @@ const { PDFDocument, degrees } = PDFLib;
               return null;
             }
 
+            if (statusEl) {
+              setStatus(statusEl, "");
+            }
+
             const cleanFile = new File([decryptedBuffer], file.name, { type: "application/pdf" });
-            return { file: cleanFile, buffer: decryptedBuffer };
+            const result = { file: cleanFile, buffer: decryptedBuffer };
+            unlockedFilesCache.set(cacheKey, result);
+            return { file: cleanFile, buffer: decryptedBuffer.slice(0) };
           }
         }
 
@@ -561,9 +581,9 @@ const { PDFDocument, degrees } = PDFLib;
           const thumbsEl = document.createElement("div");
           thumbsEl.className = "thumbs file-cards";
 
-          async function makeCoverThumb(file) {
+          async function makeCoverThumb(file, initialBuffer) {
             try {
-              const buf = await readAsArrayBuffer(file);
+              const buf = initialBuffer ? initialBuffer.slice(0) : await readAsArrayBuffer(file);
               const pdf = await pdfjsLib.getDocument({ data: buf })
                 .promise;
               const page = await pdf.getPage(1);
@@ -580,9 +600,7 @@ const { PDFDocument, degrees } = PDFLib;
                 pageCount: pdf.numPages,
               };
             } catch (e) {
-              if (e.name === "PasswordException" || (e.message && e.message.toLowerCase().includes("password"))) {
-                setStatus(status, `⚠️ "${file.name}" está protegido por senha. Remova a proteção para continuar.`, "error");
-              }
+              console.warn("Erro ao gerar miniatura do arquivo:", e);
               return { url: null, pageCount: "?" };
             }
           }
@@ -667,6 +685,13 @@ const { PDFDocument, degrees } = PDFLib;
                 e.stopPropagation();
                 files = files.filter((f) => f.id !== entry.id);
                 renderList();
+                if (files.length === 0) {
+                  setStatus(status, "");
+                } else if (files.length === 1) {
+                  setStatus(status, "Adicione mais um PDF para poder combinar.", "");
+                } else {
+                  setStatus(status, `${files.length} PDFs prontos para combinar.`, "");
+                }
               });
               thumb.appendChild(rm);
 
@@ -692,16 +717,26 @@ const { PDFDocument, degrees } = PDFLib;
                 const f = unlocked.file;
                 const entry = {
                   file: f,
+                  buffer: unlocked.buffer,
                   id: uid++,
                   pageCount: "...",
                   thumbUrl: null,
                 };
                 files.push(entry);
                 renderList();
-                const { url, pageCount } = await makeCoverThumb(f);
+                const { url, pageCount } = await makeCoverThumb(f, unlocked.buffer);
                 entry.thumbUrl = url;
                 entry.pageCount = pageCount;
                 renderList();
+              }
+              if (files.length > 0) {
+                setStatus(
+                  status,
+                  files.length < 2
+                    ? "Adicione mais um PDF para poder combinar."
+                    : `${files.length} PDFs prontos para combinar.`,
+                  "",
+                );
               }
             },
           );
@@ -722,7 +757,9 @@ const { PDFDocument, degrees } = PDFLib;
             try {
               const merged = await PDFDocument.create();
               for (const entry of files) {
-                const bytes = await readAsArrayBuffer(entry.file);
+                const bytes = entry.buffer
+                  ? entry.buffer.slice(0)
+                  : await readAsArrayBuffer(entry.file);
                 const doc = await PDFDocument.load(bytes, {
                   ignoreEncryption: true,
                 });
