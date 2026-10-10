@@ -145,7 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
 
         let alert = NSAlert()
         alert.messageText = "\(appName) para macOS"
-        var details = "Versão \(version) • Edição Nativa\n\nFerramenta integrada de manipulação e organização de PDFs.\nFunciona 100% offline com segurança total para seus documentos."
+        var details = "Versão \(version) • Edição Nativa"
         if !copyright.isEmpty {
             details += "\n\n\(copyright)"
         }
