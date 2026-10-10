@@ -1,0 +1,630 @@
+/* ==========================================================================
+   PDF TOOL - macOS Native Edition Styling
+   ========================================================================== */
+
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --card-hover: #ffffff;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --ink: #0f172a;
+  --ink-secondary: #475569;
+  --muted: #64748b;
+  --red: #e5322d;
+  --red-hover: #dc2626;
+  --red-light: #fef2f2;
+  --accent-glow: rgba(229, 50, 45, 0.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.09);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416;
+    --card: #1c1d22;
+    --card-hover: #22242b;
+    --border: #2e313a;
+    --border-hover: #3e424f;
+    --ink: #f8fafc;
+    --ink-secondary: #cbd5e1;
+    --muted: #94a3b8;
+    --red: #ef4444;
+    --red-hover: #dc2626;
+    --red-light: #291416;
+    --accent-glow: rgba(239, 68, 68, 0.22);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* macOS Window Title Bar & Drag Area */
+.mac-titlebar {
+  height: 48px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 80px;
+  padding-right: 20px;
+  background: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.mac-titlebar-drag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-app-region: drag;
+  z-index: -1;
+}
+
+.mac-titlebar-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.mac-app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mac-app-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+}
+
+/* Layout Principal */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 28px 60px;
+  min-height: calc(100vh - 90px);
+}
+
+.hero-header {
+  margin-bottom: 30px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+p.subtitle {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Cards de Ferramentas */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tool-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+}
+
+.tool-card:hover {
+  background: var(--card-hover);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.tool-card:active {
+  transform: translateY(0);
+}
+
+.tool-card .icon {
+  font-size: 30px;
+  margin-bottom: 14px;
+  display: inline-block;
+  line-height: 1;
+}
+
+.tool-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.tool-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* Workspace */
+.workspace {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn 0.2s ease-out;
+  -webkit-app-region: no-drag;
+}
+
+.workspace.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.workspace-top-bar {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+  -webkit-app-region: no-drag;
+}
+
+.back-btn:hover {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border-hover);
+}
+
+.back-arrow {
+  font-size: 15px;
+}
+
+.workspace h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 44px 24px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  background: var(--bg);
+  transition: var(--transition);
+  position: relative;
+  margin-bottom: 24px;
+  -webkit-app-region: no-drag;
+}
+
+.dropzone:hover {
+  border-color: var(--muted);
+  background: var(--card);
+}
+
+.dropzone.dragover {
+  border-color: var(--red);
+  background: var(--red-light);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  transform: scale(1.005);
+}
+
+.dropzone strong {
+  color: var(--ink);
+  font-weight: 600;
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+/* Action Button */
+.action-btn {
+  background: var(--red);
+  color: #ffffff;
+  border: none;
+  padding: 12px 26px;
+  border-radius: var(--radius-sm);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 6px rgba(229, 50, 45, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  -webkit-app-region: no-drag;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--red-hover);
+  box-shadow: 0 4px 12px rgba(229, 50, 45, 0.35);
+  transform: translateY(-1px);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: grayscale(0.5);
+}
+
+/* Status Messages */
+.status {
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.status.success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.status.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Thumbs */
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.thumbs.file-cards {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+}
+
+.thumb {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.thumb:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.thumb.selected {
+  border-color: var(--red);
+  background: var(--red-light);
+  box-shadow: 0 0 0 2px var(--red);
+}
+
+.thumb canvas, .thumb img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+  background: #ffffff;
+}
+
+.thumb .page-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.thumb .file-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 8px;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thumb .page-count-badge {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Actions in thumb */
+.thumb-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.card-rot-btn, .thumb-rm-btn, .order-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.card-rot-btn:hover, .order-btn:hover {
+  border-color: var(--ink-secondary);
+  color: var(--ink);
+}
+
+.thumb-rm-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.thumb-rm-btn:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+}
+
+.dragging-cursor {
+  cursor: grabbing !important;
+}
+
+.dragging-active {
+  opacity: 0.45;
+  transform: scale(0.96);
+  border: 2px dashed var(--red) !important;
+}
+
+/* PDF to JPG */
+.pdf2jpg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 14px;
+}
+
+.pdf2jpg-toolbar button {
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.pdf2jpg-toolbar button:hover {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border-hover);
+}
+
+.pdf2jpg-count {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.pdf2jpg-thumb {
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pdf2jpg-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  background: var(--card);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  z-index: 3;
+  transition: var(--transition);
+}
+
+.pdf2jpg-thumb.selected .pdf2jpg-check {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.rotate-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.rotate-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* JPG to PDF */
+.orientation-selector {
+  display: inline-flex;
+  gap: 8px;
+  margin: 14px 0;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.orientation-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.orientation-btn.active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* Footer */
+.mac-footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  user-select: none;
+}
