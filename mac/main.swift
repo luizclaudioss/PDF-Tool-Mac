@@ -277,7 +277,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         }
     }
 
-    // MARK: - WKUIDelegate (Native Alerts)
+        // MARK: - WKUIDelegate (File Picker Open Panel & Alerts)
+    func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
+        let openPanel = NSOpenPanel()
+        openPanel.allowsMultipleSelection = parameters.allowsMultipleSelection
+        openPanel.canChooseDirectories = parameters.allowsDirectories
+        openPanel.canChooseFiles = true
+        openPanel.title = "Selecionar Arquivo"
+        openPanel.prompt = "Selecionar"
+
+        if let win = self.window {
+            openPanel.beginSheetModal(for: win) { response in
+                completionHandler(response == .OK ? openPanel.urls : nil)
+            }
+        } else {
+            openPanel.begin { response in
+                completionHandler(response == .OK ? openPanel.urls : nil)
+            }
+        }
+    }
+
+// MARK: - WKUIDelegate (Native Alerts)
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alert = NSAlert()
         alert.messageText = "PDF Tool"

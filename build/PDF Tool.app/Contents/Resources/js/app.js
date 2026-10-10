@@ -81,15 +81,29 @@ const { PDFDocument, degrees } = PDFLib;
         ) {
           const dz = document.createElement("div");
           dz.className = "dropzone";
-          dz.innerHTML = `<strong>Clique para selecionar</strong> ou arraste ${label || "o arquivo"} aqui`;
+
+          const labelText = document.createElement("div");
+          labelText.className = "dropzone-label";
+          labelText.innerHTML = `<strong>Clique para selecionar</strong> ou arraste ${label || "o arquivo"} aqui`;
+          dz.appendChild(labelText);
+
           const input = document.createElement("input");
           input.type = "file";
-          input.style.display = "none";
+          input.className = "dropzone-input";
           input.multiple = !!multiple;
           input.accept = accept || "application/pdf";
           dz.appendChild(input);
 
-          dz.addEventListener("click", () => input.click());
+          input.addEventListener("click", (e) => {
+            e.stopPropagation();
+          });
+
+          input.addEventListener("change", () => {
+            if (input.files && input.files.length > 0) {
+              onFiles(Array.from(input.files));
+            }
+          });
+
           dz.addEventListener("dragover", (e) => {
             e.preventDefault();
             dz.classList.add("dragover");
@@ -100,11 +114,10 @@ const { PDFDocument, degrees } = PDFLib;
           dz.addEventListener("drop", (e) => {
             e.preventDefault();
             dz.classList.remove("dragover");
-            onFiles(Array.from(e.dataTransfer.files));
+            if (e.dataTransfer && e.dataTransfer.files) {
+              onFiles(Array.from(e.dataTransfer.files));
+            }
           });
-          input.addEventListener("change", () =>
-            onFiles(Array.from(input.files)),
-          );
           container.appendChild(dz);
           return dz;
         }
