@@ -85,6 +85,7 @@ const { PDFDocument, degrees } = PDFLib;
         ];
 
         function renderHome() {
+          document.body.classList.add("on-home");
           const grid = document.getElementById("tool-grid");
           grid.innerHTML = TOOLS.map(
             (t) => `
@@ -105,6 +106,7 @@ const { PDFDocument, degrees } = PDFLib;
           currentActiveStatusEl = null;
           currentSaveBtn = null;
           window.currentDropzoneHandler = null;
+          document.body.classList.add("on-home");
           document.getElementById("home-screen").style.display =
             "block";
           document
@@ -114,6 +116,7 @@ const { PDFDocument, degrees } = PDFLib;
         }
 
         function openTool(id) {
+          document.body.classList.remove("on-home");
           document.getElementById("home-screen").style.display =
             "none";
           const ws = document.getElementById("workspace");
@@ -122,6 +125,20 @@ const { PDFDocument, degrees } = PDFLib;
             document.getElementById("workspace-content");
           content.innerHTML = "";
           RENDERERS[id](content);
+        }
+
+        function hexToRgb(hex) {
+          let c = (hex || "#dc2626").replace("#", "").trim();
+          if (c.length === 3) {
+            c = c.split("").map((x) => x + x).join("");
+          }
+          const num = parseInt(c, 16);
+          if (isNaN(num)) return { r: 220, g: 38, b: 38 };
+          return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255,
+          };
         }
 
         function getBaseFilename(filename, fallback = "documento") {
@@ -2077,6 +2094,7 @@ const { PDFDocument, degrees } = PDFLib;
           btn.disabled = true;
 
           const status = statusEl(container);
+          let dropzoneEl = null;
 
           function clearActiveFile() {
             fileBuffer = null;
@@ -2084,6 +2102,7 @@ const { PDFDocument, degrees } = PDFLib;
             fileBarWrap.innerHTML = "";
             optionsBox.style.display = "none";
             resultWrap.innerHTML = "";
+            if (dropzoneEl) dropzoneEl.style.display = "flex";
             btn.disabled = true;
             setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
           }
@@ -2106,7 +2125,7 @@ const { PDFDocument, degrees } = PDFLib;
             if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
           }
 
-          makeDropzone(
+          dropzoneEl = makeDropzone(
             container,
             { label: "o PDF" },
             async (newFiles) => {
@@ -2119,6 +2138,7 @@ const { PDFDocument, degrees } = PDFLib;
               setStatus(status, "Analisando páginas...", "");
               try {
                 const pdf = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                if (dropzoneEl) dropzoneEl.style.display = "none";
                 renderLoadedBar(currentFile.name, pdf.numPages, fileBuffer.byteLength);
                 optionsBox.style.display = "flex";
                 btn.disabled = false;
@@ -2227,6 +2247,7 @@ const { PDFDocument, degrees } = PDFLib;
           optionsBox.style.display = "none";
 
           const status = statusEl(container);
+          let dropzoneEl = null;
 
           function clearActiveFile() {
             fileBuffer = null;
@@ -2234,6 +2255,7 @@ const { PDFDocument, degrees } = PDFLib;
             wasOriginallyEncrypted = false;
             fileBarWrap.innerHTML = "";
             optionsBox.style.display = "none";
+            if (dropzoneEl) dropzoneEl.style.display = "flex";
             btn.disabled = true;
             setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
           }
@@ -2339,7 +2361,7 @@ const { PDFDocument, degrees } = PDFLib;
           btn.textContent = "Proteger e Salvar PDF";
           btn.disabled = true;
 
-          makeDropzone(
+          dropzoneEl = makeDropzone(
             container,
             { label: "o PDF" },
             async (newFiles) => {
@@ -2365,6 +2387,7 @@ const { PDFDocument, degrees } = PDFLib;
 
               try {
                 const pdf = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                if (dropzoneEl) dropzoneEl.style.display = "none";
                 renderLoadedBar(currentFile.name, pdf.numPages);
                 renderModeUI();
                 optionsBox.style.display = "flex";
@@ -2437,6 +2460,8 @@ const { PDFDocument, degrees } = PDFLib;
           let currentFile = null;
           let pageCount = 0;
           let firstPageCanvas = null;
+          let selectedColor = "#dc2626";
+          let dropzoneEl = null;
 
           const fileBarWrap = document.createElement("div");
           fileBarWrap.className = "loaded-file-bar-wrap";
@@ -2471,7 +2496,35 @@ const { PDFDocument, degrees } = PDFLib;
                   <button type="button" class="chip-btn" data-text="ORIGINAL">ORIGINAL</button>
                 </div>
               </div>
-              <div class="options-row-group">
+              <div class="form-field-group" style="margin-top:10px;">
+                <label class="form-field-label" style="display:block;margin-bottom:6px;">Cor da Marca d'Água:</label>
+                <div class="wm-color-swatches" id="wm-color-swatches">
+                  <button type="button" class="wm-color-btn selected" data-color="#dc2626" title="Vermelho" style="--swatch-color:#dc2626;">
+                    <span class="swatch-circle"></span> Vermelho
+                  </button>
+                  <button type="button" class="wm-color-btn" data-color="#64748b" title="Cinza" style="--swatch-color:#64748b;">
+                    <span class="swatch-circle"></span> Cinza
+                  </button>
+                  <button type="button" class="wm-color-btn" data-color="#2563eb" title="Azul" style="--swatch-color:#2563eb;">
+                    <span class="swatch-circle"></span> Azul
+                  </button>
+                  <button type="button" class="wm-color-btn" data-color="#16a34a" title="Verde" style="--swatch-color:#16a34a;">
+                    <span class="swatch-circle"></span> Verde
+                  </button>
+                  <button type="button" class="wm-color-btn" data-color="#d97706" title="Laranja" style="--swatch-color:#d97706;">
+                    <span class="swatch-circle"></span> Laranja
+                  </button>
+                  <button type="button" class="wm-color-btn" data-color="#0f172a" title="Preto" style="--swatch-color:#0f172a;">
+                    <span class="swatch-circle"></span> Preto
+                  </button>
+                  <label class="wm-color-custom-btn" title="Personalizar cor">
+                    <input type="color" id="wm-custom-color" value="#dc2626" />
+                    <span class="wm-color-custom-preview" style="--custom-color:#dc2626;"></span>
+                    <span>Outra</span>
+                  </label>
+                </div>
+              </div>
+              <div class="options-row-group" style="margin-top:10px;">
                 <div>
                   <label class="form-field-label" style="display:block;margin-bottom:4px;">Orientação:</label>
                   <select id="wm-orient" class="select-native">
@@ -2582,7 +2635,8 @@ const { PDFDocument, degrees } = PDFLib;
               }
               const fontSize = Math.max(16, Math.round(canvas.width / 8));
               ctx.font = `bold ${fontSize}px sans-serif`;
-              ctx.fillStyle = `rgba(100, 116, 139, ${wmOpacity})`;
+              const rgb = hexToRgb(selectedColor);
+              ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${wmOpacity})`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
               ctx.fillText(wmText, 0, 0);
@@ -2622,9 +2676,46 @@ const { PDFDocument, degrees } = PDFLib;
             }
           }
 
+          wmSection.querySelectorAll(".wm-color-btn").forEach((cBtn) => {
+            cBtn.addEventListener("click", () => {
+              wmSection.querySelectorAll(".wm-color-btn, .wm-color-custom-btn").forEach((b) => b.classList.remove("selected"));
+              cBtn.classList.add("selected");
+              selectedColor = cBtn.dataset.color;
+              renderPreview();
+            });
+          });
+
+          const customColorInput = wmSection.querySelector("#wm-custom-color");
+          const customColorBtn = wmSection.querySelector(".wm-color-custom-btn");
+          const customColorPreview = wmSection.querySelector(".wm-color-custom-preview");
+
+          if (customColorInput) {
+            customColorInput.addEventListener("input", (e) => {
+              wmSection.querySelectorAll(".wm-color-btn").forEach((b) => b.classList.remove("selected"));
+              if (customColorBtn) customColorBtn.classList.add("selected");
+              selectedColor = e.target.value;
+              if (customColorPreview) customColorPreview.style.setProperty("--custom-color", selectedColor);
+              renderPreview();
+            });
+          }
+
           wmSection.querySelectorAll(".chip-btn").forEach((chip) => {
             chip.addEventListener("click", () => {
-              wmSection.querySelector("#wm-text").value = chip.dataset.text;
+              const text = chip.dataset.text;
+              wmSection.querySelector("#wm-text").value = text;
+              let targetColor = null;
+              if (text === "CONFIDENCIAL" || text === "URGENTE") targetColor = "#dc2626";
+              else if (text === "APROVADO") targetColor = "#16a34a";
+              else if (text === "RASCUNHO" || text === "CÓPIA") targetColor = "#64748b";
+              else if (text === "ORIGINAL") targetColor = "#2563eb";
+
+              if (targetColor) {
+                selectedColor = targetColor;
+                wmSection.querySelectorAll(".wm-color-btn").forEach((b) => {
+                  b.classList.toggle("selected", b.dataset.color === targetColor);
+                });
+                if (customColorBtn) customColorBtn.classList.remove("selected");
+              }
               renderPreview();
             });
           });
@@ -2643,6 +2734,7 @@ const { PDFDocument, degrees } = PDFLib;
             firstPageCanvas = null;
             fileBarWrap.innerHTML = "";
             mainLayout.style.display = "none";
+            if (dropzoneEl) dropzoneEl.style.display = "flex";
             btn.disabled = true;
             setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
           }
@@ -2664,7 +2756,7 @@ const { PDFDocument, degrees } = PDFLib;
             if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
           }
 
-          makeDropzone(
+          dropzoneEl = makeDropzone(
             container,
             { label: "o PDF" },
             async (newFiles) => {
@@ -2685,6 +2777,7 @@ const { PDFDocument, degrees } = PDFLib;
                 firstPageCanvas.height = vp.height;
                 await page1.render({ canvasContext: firstPageCanvas.getContext("2d"), viewport: vp }).promise;
 
+                if (dropzoneEl) dropzoneEl.style.display = "none";
                 renderLoadedBar(currentFile.name, pageCount);
                 mainLayout.style.display = "grid";
                 updateControlsState();
@@ -2724,6 +2817,8 @@ const { PDFDocument, degrees } = PDFLib;
                   const fontSize = Math.max(28, Math.round(width / 11));
                   const textWidth = fontBold.widthOfTextAtSize(wmText, fontSize);
                   const isDiag = wmOrient === "diagonal";
+                  const rgb = hexToRgb(selectedColor);
+                  const pdfColor = PDFLib.rgb(rgb.r / 255, rgb.g / 255, rgb.b / 255);
 
                   if (isDiag) {
                     const angleRad = Math.PI / 4;
@@ -2734,7 +2829,7 @@ const { PDFDocument, degrees } = PDFLib;
                       y,
                       size: fontSize,
                       font: fontBold,
-                      color: PDFLib.rgb(0.5, 0.5, 0.5),
+                      color: pdfColor,
                       opacity: wmOpacity,
                       rotate: degrees(45),
                     });
@@ -2746,7 +2841,7 @@ const { PDFDocument, degrees } = PDFLib;
                       y,
                       size: fontSize,
                       font: fontBold,
-                      color: PDFLib.rgb(0.5, 0.5, 0.5),
+                      color: pdfColor,
                       opacity: wmOpacity,
                     });
                   }

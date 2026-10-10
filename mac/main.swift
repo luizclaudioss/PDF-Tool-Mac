@@ -145,7 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
 
         let alert = NSAlert()
         alert.messageText = "\(appName) para macOS"
-        var details = "Versão \(version) • Edição Nativa"
+        var details = "Versão \(version) • 2026"
         if !copyright.isEmpty {
             details += "\n\n\(copyright)"
         }
@@ -177,12 +177,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         let rect = NSRect(x: 0, y: 0, width: 980, height: 640)
         window = NSWindow(
             contentRect: rect,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
         window.center()
-        window.minSize = NSSize(width: 880, height: 560)
+        window.minSize = NSSize(width: 980, height: 640)
+        window.maxSize = NSSize(width: 980, height: 640)
         window.title = "PDF Tool"
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
