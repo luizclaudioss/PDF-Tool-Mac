@@ -55,6 +55,7 @@ const { PDFDocument, degrees } = PDFLib;
         renderHome();
 
         function goHome() {
+          if (currentPasswordPrompt) currentPasswordPrompt.cancel();
           const overlay = document.getElementById("save-toast-overlay");
           if (overlay) overlay.classList.add("hidden");
           currentActiveStatusEl = null;
@@ -158,6 +159,177 @@ const { PDFDocument, degrees } = PDFLib;
             reader.onerror = reject;
             reader.readAsDataURL(blob);
           });
+        }
+
+        // ---------- Descriptografia e Desbloqueio Nativo de PDFs com Senha ----------
+        const decryptCallbacks = {};
+        let decryptCallbackIdCounter = 0;
+
+        function nativeDecryptPdf(buffer, password) {
+          return new Promise(async (resolve, reject) => {
+            if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.nativeDecryptPdf) {
+              reject(new Error("Descriptografia nativa não disponível nesta plataforma."));
+              return;
+            }
+            const callbackId = "dec_" + (++decryptCallbackIdCounter);
+            decryptCallbacks[callbackId] = { resolve, reject };
+
+            try {
+              const base64 = await blobToBase64(new Blob([buffer], { type: "application/pdf" }));
+              window.webkit.messageHandlers.nativeDecryptPdf.postMessage({
+                data: base64,
+                password: password,
+                callbackId: callbackId
+              });
+            } catch (e) {
+              delete decryptCallbacks[callbackId];
+              reject(e);
+            }
+          });
+        }
+
+        window.onNativeDecryptResult = function(callbackId, success, dataBase64, error) {
+          const cb = decryptCallbacks[callbackId];
+          if (!cb) return;
+          delete decryptCallbacks[callbackId];
+
+          if (success && dataBase64) {
+            try {
+              const binary = atob(dataBase64);
+              const len = binary.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+              cb.resolve(bytes.buffer);
+            } catch (e) {
+              cb.reject(new Error("Falha ao decodificar documento desbloqueado."));
+            }
+          } else {
+            cb.reject(new Error(error || "Senha incorreta."));
+          }
+        };
+
+        let currentPasswordPrompt = null;
+
+        function requestPdfPasswordModal(fileName, buffer) {
+          return new Promise((resolve) => {
+            const overlay = document.getElementById("password-modal-overlay");
+            const filenameEl = document.getElementById("password-modal-filename");
+            const input = document.getElementById("password-modal-input");
+            const eyeBtn = document.getElementById("password-modal-toggle-eye");
+            const errorEl = document.getElementById("password-modal-error");
+            const cancelBtn = document.getElementById("password-modal-cancel");
+            const submitBtn = document.getElementById("password-modal-submit");
+            const form = document.getElementById("password-modal-form");
+
+            filenameEl.textContent = `O arquivo "${fileName}" está protegido por senha. Digite a senha para continuar:`;
+            input.value = "";
+            input.type = "password";
+            eyeBtn.textContent = "👁️";
+            input.classList.remove("input-error");
+            errorEl.textContent = "";
+            errorEl.classList.add("hidden");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Desbloquear";
+
+            overlay.classList.remove("hidden");
+            setTimeout(() => input.focus(), 80);
+
+            let resolved = false;
+
+            function cleanup() {
+              overlay.classList.add("hidden");
+              eyeBtn.onclick = null;
+              cancelBtn.onclick = null;
+              form.onsubmit = null;
+              currentPasswordPrompt = null;
+            }
+
+            eyeBtn.onclick = (e) => {
+              e.preventDefault();
+              input.type = input.type === "password" ? "text" : "password";
+              eyeBtn.textContent = input.type === "password" ? "👁️" : "🔒";
+            };
+
+            cancelBtn.onclick = () => {
+              if (resolved) return;
+              resolved = true;
+              cleanup();
+              resolve(null);
+            };
+
+            form.onsubmit = async (e) => {
+              e.preventDefault();
+              const pwd = input.value;
+              if (!pwd) {
+                errorEl.textContent = "Por favor, digite a senha do arquivo.";
+                errorEl.classList.remove("hidden");
+                input.classList.add("input-error");
+                input.focus();
+                return;
+              }
+
+              submitBtn.disabled = true;
+              submitBtn.textContent = "Desbloqueando...";
+              errorEl.classList.add("hidden");
+              input.classList.remove("input-error");
+
+              try {
+                const decryptedBuffer = await nativeDecryptPdf(buffer, pwd);
+                resolved = true;
+                cleanup();
+                resolve(decryptedBuffer);
+              } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Desbloquear";
+                errorEl.textContent = err.message || "Senha incorreta. Verifique e tente novamente.";
+                errorEl.classList.remove("hidden");
+                input.classList.add("input-error");
+                input.select();
+                input.focus();
+              }
+            };
+
+            currentPasswordPrompt = {
+              cancel: () => {
+                if (!resolved) {
+                  resolved = true;
+                  cleanup();
+                  resolve(null);
+                }
+              }
+            };
+          });
+        }
+
+        async function ensurePdfFileUnlocked(file, statusEl) {
+          let buf = await readAsArrayBuffer(file);
+          try {
+            const testTask = pdfjsLib.getDocument({ data: buf.slice(0) });
+            await testTask.promise;
+            return { file, buffer: buf };
+          } catch (err) {
+            const isEncrypted = err.name === "PasswordException" ||
+              (err.message && err.message.toLowerCase().includes("password"));
+            if (!isEncrypted) {
+              throw err;
+            }
+
+            if (statusEl) {
+              setStatus(statusEl, "Aguardando senha para desbloqueio...", "");
+            }
+            const decryptedBuffer = await requestPdfPasswordModal(file.name, buf);
+            if (!decryptedBuffer) {
+              if (statusEl) {
+                setStatus(statusEl, "Desbloqueio cancelado pelo usuário.", "");
+              }
+              return null;
+            }
+
+            const cleanFile = new File([decryptedBuffer], file.name, { type: "application/pdf" });
+            return { file: cleanFile, buffer: decryptedBuffer };
+          }
         }
 
         // Estado e controle de salvamento nativo macOS
@@ -510,7 +682,10 @@ const { PDFDocument, degrees } = PDFLib;
                   f.type === "application/pdf" ||
                   f.name.endsWith(".pdf"),
               );
-              for (const f of pdfFiles) {
+              for (const rawFile of pdfFiles) {
+                const unlocked = await ensurePdfFileUnlocked(rawFile, status);
+                if (!unlocked) continue;
+                const f = unlocked.file;
                 const entry = {
                   file: f,
                   id: uid++,
@@ -675,8 +850,10 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
-              currentFileName = newFiles[0].name;
-              fileBuffer = await readAsArrayBuffer(newFiles[0]);
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFileName = unlocked.file.name;
+              fileBuffer = unlocked.buffer;
               thumbArea.innerHTML = "";
               setStatus(status, "Carregando páginas...", "");
               let state;
@@ -784,8 +961,10 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
-              currentFileName = newFiles[0].name;
-              fileBuffer = await readAsArrayBuffer(newFiles[0]);
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFileName = unlocked.file.name;
+              fileBuffer = unlocked.buffer;
               thumbsArea.innerHTML = "";
               pages = [];
               setStatus(status, "Carregando páginas...", "");
@@ -794,16 +973,7 @@ const { PDFDocument, degrees } = PDFLib;
                 const loadingTask = pdfjsLib.getDocument({
                   data: fileBuffer.slice(0),
                 });
-                let pdf;
-                try {
-                  pdf = await loadingTask.promise;
-                } catch (loadErr) {
-                  if (loadErr.name === "PasswordException" || (loadErr.message && loadErr.message.toLowerCase().includes("password"))) {
-                    setStatus(status, "⚠️ Este PDF está protegido por senha. Remova a proteção antes de carregá-lo.", "error");
-                    return;
-                  }
-                  throw loadErr;
-                }
+                const pdf = await loadingTask.promise;
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                   setStatus(status, `Carregando miniaturas (${i} de ${pdf.numPages})...`, "");
@@ -996,8 +1166,10 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
-              currentFileName = newFiles[0].name;
-              fileBuffer = await readAsArrayBuffer(newFiles[0]);
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFileName = unlocked.file.name;
+              fileBuffer = unlocked.buffer;
               thumbArea.innerHTML = "";
               setStatus(status, "Carregando páginas...", "");
               try {
@@ -1160,20 +1332,13 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
-              const buf = await readAsArrayBuffer(newFiles[0]);
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              const { file, buffer } = unlocked;
               resultArea.innerHTML = "";
               setStatus(status, "Carregando páginas...", "");
               try {
-                let pdf;
-                try {
-                  pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-                } catch (pdfErr) {
-                  if (pdfErr.name === "PasswordException" || (pdfErr.message && pdfErr.message.toLowerCase().includes("password"))) {
-                    setStatus(status, "⚠️ Este PDF está protegido por senha. Remova a proteção antes de convertê-lo.", "error");
-                    return;
-                  }
-                  throw pdfErr;
-                }
+                const pdf = await pdfjsLib.getDocument({ data: buffer.slice(0) }).promise;
 
                 const toolbar = document.createElement("div");
                 toolbar.className = "pdf2jpg-toolbar";
@@ -1303,7 +1468,7 @@ const { PDFDocument, degrees } = PDFLib;
                       const blob = await new Promise((res) =>
                         finalCanvas.toBlob(res, "image/jpeg", 0.92),
                       );
-                      const baseName = getBaseFilename(newFiles[0].name, "documento");
+                      const baseName = getBaseFilename(file.name, "documento");
                       exportFiles.push({ blob, filename: `${baseName}_pagina_${i}.jpg` });
                     }
                     prepareSaveAction(status, dlBtn);
@@ -1610,8 +1775,13 @@ window.onNativeSaveCancelled = function () {
   }
 };
 
-// Fechar modal toast e retornar à tela inicial ao clicar fora ou pressionar Escape
+// Fechar modal toast ou modal de senha ao clicar fora ou pressionar Escape
 document.addEventListener("click", (e) => {
+  const pwdOverlay = document.getElementById("password-modal-overlay");
+  if (pwdOverlay && !pwdOverlay.classList.contains("hidden") && e.target === pwdOverlay) {
+    if (currentPasswordPrompt) currentPasswordPrompt.cancel();
+    return;
+  }
   const overlay = document.getElementById("save-toast-overlay");
   if (overlay && !overlay.classList.contains("hidden") && e.target === overlay) {
     closeToastAndGoHome();
@@ -1620,6 +1790,11 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
+    const pwdOverlay = document.getElementById("password-modal-overlay");
+    if (pwdOverlay && !pwdOverlay.classList.contains("hidden")) {
+      if (currentPasswordPrompt) currentPasswordPrompt.cancel();
+      return;
+    }
     const overlay = document.getElementById("save-toast-overlay");
     if (overlay && !overlay.classList.contains("hidden")) {
       closeToastAndGoHome();

@@ -1,6 +1,7 @@
 import Cocoa
 import WebKit
 import UniformTypeIdentifiers
+import PDFKit
 
 // MARK: - Application Delegate
 class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate {
@@ -184,6 +185,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         contentController.add(self, name: "nativeSaveBatch")
         contentController.add(self, name: "nativeOpenFile")
         contentController.add(self, name: "nativeRevealFile")
+        contentController.add(self, name: "nativeDecryptPdf")
         config.userContentController = contentController
         
         // Habilitar suporte a inspecionar
@@ -270,7 +272,71 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
             }
             let fileURL = URL(fileURLWithPath: path)
             NSWorkspace.shared.activateFileViewerSelecting([fileURL])
+        } else if message.name == "nativeDecryptPdf" {
+            guard let dict = message.body as? [String: Any],
+                  let base64 = dict["data"] as? String,
+                  let password = dict["password"] as? String,
+                  let callbackId = dict["callbackId"] as? String,
+                  let pdfData = Data(base64Encoded: base64) else {
+                return
+            }
+            handleDecryptPdf(data: pdfData, password: password, callbackId: callbackId)
         }
+    }
+
+    // Desbloqueio e descriptografia nativa de PDF com PDFKit
+    private func handleDecryptPdf(data: Data, password: String, callbackId: String) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let pdfDoc = PDFDocument(data: data) else {
+                DispatchQueue.main.async {
+                    self?.sendDecryptResult(callbackId: callbackId, success: false, dataBase64: nil, error: "Arquivo PDF inválido.")
+                }
+                return
+            }
+
+            if pdfDoc.isLocked {
+                let unlocked = pdfDoc.unlock(withPassword: password)
+                if !unlocked {
+                    DispatchQueue.main.async {
+                        self?.sendDecryptResult(callbackId: callbackId, success: false, dataBase64: nil, error: "Senha incorreta.")
+                    }
+                    return
+                }
+            }
+
+            // Exporta páginas para um documento limpo sem senha
+            let cleanDoc = PDFDocument()
+            for i in 0..<pdfDoc.pageCount {
+                if let page = pdfDoc.page(at: i) {
+                    cleanDoc.insert(page, at: cleanDoc.pageCount)
+                }
+            }
+
+            guard let cleanData = cleanDoc.dataRepresentation() else {
+                DispatchQueue.main.async {
+                    self?.sendDecryptResult(callbackId: callbackId, success: false, dataBase64: nil, error: "Falha ao processar as páginas do documento.")
+                }
+                return
+            }
+
+            let resultBase64 = cleanData.base64EncodedString()
+            DispatchQueue.main.async {
+                self?.sendDecryptResult(callbackId: callbackId, success: true, dataBase64: resultBase64, error: nil)
+            }
+        }
+    }
+
+    private func sendDecryptResult(callbackId: String, success: Bool, dataBase64: String?, error: String?) {
+        var js = ""
+        if success, let b64 = dataBase64 {
+            js = "window.onNativeDecryptResult && window.onNativeDecryptResult('\(callbackId)', true, '\(b64)', null);"
+        } else {
+            let errStr = (error ?? "Erro desconhecido")
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "'", with: "\\'")
+            js = "window.onNativeDecryptResult && window.onNativeDecryptResult('\(callbackId)', false, null, '\(errStr)');"
+        }
+        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
 
     // Salvamento individual com NSSavePanel nativo

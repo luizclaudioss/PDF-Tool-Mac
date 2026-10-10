@@ -794,3 +794,154 @@ p.subtitle {
   background: var(--bg);
 }
 
+/* ==========================================================================
+   Modal de Senha para Desbloqueio de PDF
+   ========================================================================== */
+.password-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeInOverlay 0.18s ease-out;
+  -webkit-app-region: no-drag;
+}
+
+.password-modal-overlay.hidden {
+  display: none !important;
+}
+
+.password-modal-card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: scaleInToast 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-app-region: no-drag;
+}
+
+.password-modal-icon {
+  font-size: 38px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.password-modal-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.password-modal-subtitle {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--muted);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  font-size: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  outline: none;
+  transition: var(--transition);
+}
+
+.password-input-wrapper input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.password-input-wrapper input.input-error {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.password-eye-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  font-size: 15px;
+  color: var(--muted);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-eye-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.password-modal-error {
+  font-size: 12px;
+  color: var(--red);
+  background: var(--red-light);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  margin-bottom: 14px;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.password-modal-error.hidden {
+  display: none !important;
+}
+
+.password-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background: var(--bg);
+  border-color: var(--border-hover);
+}
+
+.password-modal-actions .action-btn {
+  margin-top: 0;
+  padding: 8px 18px;
+  font-size: 13px;
+}
+
