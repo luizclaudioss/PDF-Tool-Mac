@@ -1,40 +1,62 @@
 const { PDFDocument, degrees } = PDFLib;
         pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
 
+        const SVG_ICONS = {
+          merge: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="13" height="16" rx="2"/><path d="M4 6v14a2 2 0 0 0 2 2h12"/><path d="M12 8v4"/><path d="M10 10h4"/></svg>`,
+          split: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>`,
+          rotate: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`,
+          remove: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+          pdf2jpg: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
+          jpg2pdf: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="1.5"/><path d="m14 17-2-2-4 4h10z"/></svg>`,
+          file: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+          image: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+          lock: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+          eye: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+          eyeOff: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`,
+          rotateCw: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`,
+          rotateCcw: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+          trash: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+          restore: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`,
+          chevronLeft: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+          chevronRight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+          close: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+          check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+        };
+
         const TOOLS = [
           {
             id: "merge",
-            icon: "🧩",
+            icon: SVG_ICONS.merge,
             title: "Combinar PDF",
             desc: "Combine vários PDFs em um único arquivo, na ordem que quiser.",
           },
           {
             id: "split",
-            icon: "✂️",
+            icon: SVG_ICONS.split,
             title: "Extrair páginas",
             desc: "Selecione páginas específicas e extraia-as em um novo PDF.",
           },
           {
             id: "rotate",
-            icon: "🔄",
+            icon: SVG_ICONS.rotate,
             title: "Girar PDF",
             desc: "Gire páginas do seu PDF 90°, 180° ou 270°.",
           },
           {
             id: "remove",
-            icon: "🗑️",
+            icon: SVG_ICONS.remove,
             title: "Remover páginas",
             desc: "Escolha quais páginas remover do PDF.",
           },
           {
             id: "pdf2jpg",
-            icon: "🖼️",
+            icon: SVG_ICONS.pdf2jpg,
             title: "PDF para JPG",
             desc: "Converta cada página do PDF em uma imagem JPG.",
           },
           {
             id: "jpg2pdf",
-            icon: "📷",
+            icon: SVG_ICONS.jpg2pdf,
             title: "JPG para PDF",
             desc: "Converta uma ou mais imagens em um único PDF.",
           },
@@ -230,7 +252,7 @@ const { PDFDocument, degrees } = PDFLib;
             filenameEl.textContent = `O arquivo "${fileName}" está protegido por senha. Digite a senha para continuar:`;
             input.value = "";
             input.type = "password";
-            eyeBtn.textContent = "👁️";
+            eyeBtn.innerHTML = SVG_ICONS.eye;
             input.classList.remove("input-error");
             errorEl.textContent = "";
             errorEl.classList.add("hidden");
@@ -253,7 +275,7 @@ const { PDFDocument, degrees } = PDFLib;
             eyeBtn.onclick = (e) => {
               e.preventDefault();
               input.type = input.type === "password" ? "text" : "password";
-              eyeBtn.textContent = input.type === "password" ? "👁️" : "🔒";
+              eyeBtn.innerHTML = input.type === "password" ? SVG_ICONS.eye : SVG_ICONS.eyeOff;
             };
 
             cancelBtn.onclick = () => {
@@ -404,7 +426,7 @@ const { PDFDocument, degrees } = PDFLib;
 
             const badge = document.createElement("div");
             badge.className = "saved-file-badge";
-            badge.textContent = "✓";
+            badge.innerHTML = SVG_ICONS.check;
             meta.appendChild(badge);
 
             const textWrap = document.createElement("div");
@@ -450,7 +472,7 @@ const { PDFDocument, degrees } = PDFLib;
 
             const closeBtn = document.createElement("button");
             closeBtn.className = "toast-close-btn";
-            closeBtn.textContent = "×";
+            closeBtn.innerHTML = SVG_ICONS.close;
             closeBtn.title = "Fechar e voltar ao início";
             closeBtn.onclick = () => closeToastAndGoHome();
             btns.appendChild(closeBtn);
@@ -574,7 +596,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- JUNTAR PDF ----------
         RENDERERS.merge = function (container) {
           container.innerHTML =
-            '<h2>🧩 Combinar PDF</h2><p class="hint">Adicione dois ou mais PDFs. Arraste os cartões (ou use as setas) para definir a ordem final antes de unir.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.merge}</span> Combinar PDF</h2><p class="hint">Adicione dois ou mais PDFs. Arraste os cartões (ou use as setas) para definir a ordem final antes de unir.</p>`;
           let files = []; // { file, id, pageCount, thumbUrl }
           let uid = 0;
 
@@ -619,9 +641,12 @@ const { PDFDocument, degrees } = PDFLib;
                 thumb.appendChild(img);
               } else {
                 const ph = document.createElement("div");
-                ph.style.padding = "30px 6px";
-                ph.style.fontSize = "28px";
-                ph.textContent = "📄";
+                ph.style.display = "flex";
+                ph.style.alignItems = "center";
+                ph.style.justifyContent = "center";
+                ph.style.height = "120px";
+                ph.style.color = "var(--ink-secondary)";
+                ph.innerHTML = SVG_ICONS.file;
                 thumb.appendChild(ph);
               }
 
@@ -636,11 +661,10 @@ const { PDFDocument, degrees } = PDFLib;
               moveWrap.style.gap = "4px";
               moveWrap.style.paddingBottom = "8px";
               const leftBtn = document.createElement("button");
-              leftBtn.textContent = "←";
+              leftBtn.className = "order-btn";
+              leftBtn.innerHTML = SVG_ICONS.chevronLeft;
               leftBtn.title = "Mover para a esquerda";
               leftBtn.disabled = i === 0;
-              leftBtn.style.cssText =
-                "border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;padding:2px 8px;";
               leftBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (i === 0) return;
@@ -648,11 +672,10 @@ const { PDFDocument, degrees } = PDFLib;
                 renderList();
               });
               const rightBtn = document.createElement("button");
-              rightBtn.textContent = "→";
+              rightBtn.className = "order-btn";
+              rightBtn.innerHTML = SVG_ICONS.chevronRight;
               rightBtn.title = "Mover para a direita";
               rightBtn.disabled = i === files.length - 1;
-              rightBtn.style.cssText =
-                "border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;padding:2px 8px;";
               rightBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (i === files.length - 1) return;
@@ -662,7 +685,7 @@ const { PDFDocument, degrees } = PDFLib;
               // Rotate button per file (rotates ALL pages of this file when merging)
               const rotBtn = document.createElement("button");
               rotBtn.className = "card-rot-btn";
-              rotBtn.textContent = "⟳";
+              rotBtn.innerHTML = SVG_ICONS.rotateCw;
               rotBtn.title =
                 "Girar 90° (todas as páginas deste arquivo)";
               rotBtn.addEventListener("click", (e) => {
@@ -679,7 +702,7 @@ const { PDFDocument, degrees } = PDFLib;
 
               const rm = document.createElement("button");
               rm.className = "thumb-rm-btn";
-              rm.textContent = "✕";
+              rm.innerHTML = SVG_ICONS.close;
               rm.title = "Remover";
               rm.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -849,7 +872,7 @@ const { PDFDocument, degrees } = PDFLib;
             // Rotate button on every thumb
             const rb = document.createElement("button");
             rb.className = "rotate-btn";
-            rb.textContent = "⟳";
+            rb.innerHTML = SVG_ICONS.rotateCw;
             rb.title = "Girar 90°";
             rb.addEventListener("click", (e) => {
               e.stopPropagation();
@@ -882,7 +905,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- EXTRAIR PÁGINAS ----------
         RENDERERS.split = function (container) {
           container.innerHTML =
-            '<h2>✂️ Extrair páginas</h2><p class="hint">Selecione as páginas que você quer extrair para um novo PDF.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.split}</span> Extrair páginas</h2><p class="hint">Selecione as páginas que você quer extrair para um novo PDF.</p>`;
           let fileBuffer = null;
           let currentFileName = "";
 
@@ -912,12 +935,12 @@ const { PDFDocument, degrees } = PDFLib;
             fileBarWrap.innerHTML = `
               <div class="loaded-file-bar">
                 <div class="loaded-file-info">
-                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
                   <span class="loaded-file-name" title="${name}">${name}</span>
                   <span class="loaded-file-pages">(${totalPages} pág.)</span>
                 </div>
                 <button type="button" class="btn-clear-file" title="Fechar este arquivo">
-                  ✕ Fechar arquivo
+                  ${SVG_ICONS.close} Fechar arquivo
                 </button>
               </div>
             `;
@@ -950,7 +973,7 @@ const { PDFDocument, degrees } = PDFLib;
                 );
                 renderLoadedBar(currentFileName, state.numPages);
               } catch (err) {
-                setStatus(status, "⚠️ " + err.message, "error");
+                setStatus(status, err.message, "error");
                 return;
               }
               setStatus(
@@ -1018,7 +1041,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- REMOVER PÁGINAS ----------
         RENDERERS.remove = function (container) {
           container.innerHTML =
-            '<h2>🗑️ Remover páginas</h2><p class="hint">Clique no ícone da lixeira 🗑️ para sinalizar a página em vermelho (marcada para exclusão). Se precisar, você pode clicar em ↩️ Restaurar a qualquer momento.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.remove}</span> Remover páginas</h2><p class="hint">Clique no botão de exclusão para marcar a página em vermelho. Se precisar, clique em Restaurar a qualquer momento.</p>`;
           let fileBuffer = null;
           let currentFileName = "";
           let pages = [];
@@ -1050,12 +1073,12 @@ const { PDFDocument, degrees } = PDFLib;
             fileBarWrap.innerHTML = `
               <div class="loaded-file-bar">
                 <div class="loaded-file-info">
-                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
                   <span class="loaded-file-name" title="${name}">${name}</span>
                   <span class="loaded-file-pages">(${totalPages} pág.)</span>
                 </div>
                 <button type="button" class="btn-clear-file" title="Fechar este arquivo">
-                  ✕ Fechar arquivo
+                  ${SVG_ICONS.close} Fechar arquivo
                 </button>
               </div>
             `;
@@ -1145,7 +1168,7 @@ const { PDFDocument, degrees } = PDFLib;
               // Botão Girar
               const rb = document.createElement("button");
               rb.className = "rotate-btn";
-              rb.textContent = "⟳";
+              rb.innerHTML = SVG_ICONS.rotateCw;
               rb.title = "Girar 90°";
               rb.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1158,7 +1181,7 @@ const { PDFDocument, degrees } = PDFLib;
                 // Botão Lixeira na página ativa
                 const tb = document.createElement("button");
                 tb.className = "trash-btn";
-                tb.innerHTML = "🗑️";
+                tb.innerHTML = SVG_ICONS.trash;
                 tb.title = "Marcar para excluir";
                 tb.addEventListener("click", (e) => {
                   e.stopPropagation();
@@ -1171,7 +1194,7 @@ const { PDFDocument, degrees } = PDFLib;
                 removedCount++;
                 const restoreBtn = document.createElement("button");
                 restoreBtn.className = "restore-btn";
-                restoreBtn.innerHTML = "↩️ Restaurar";
+                restoreBtn.innerHTML = `${SVG_ICONS.restore} <span>Restaurar</span>`;
                 restoreBtn.title = "Restaurar esta página";
                 restoreBtn.addEventListener("click", (e) => {
                   e.stopPropagation();
@@ -1205,7 +1228,7 @@ const { PDFDocument, degrees } = PDFLib;
                 } else {
                   setStatus(
                     status,
-                    "Clique no ícone da lixeira 🗑️ para sinalizar as páginas que deseja excluir.",
+                    "Clique no botão de exclusão da página para sinalizar as que deseja remover.",
                     "",
                   );
                 }
@@ -1268,7 +1291,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- RODAR PDF ----------
         RENDERERS.rotate = function (container) {
           container.innerHTML =
-            '<h2>🔄 Girar PDF</h2><p class="hint">Clique no botão ⟳ em cada página para girá-la 90° individualmente, ou use os botões abaixo para girar todas de uma vez.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.rotate}</span> Girar PDF</h2><p class="hint">Clique no botão de rotação em cada página para girá-la individualmente, ou use os botões abaixo para girar todas.</p>`;
           let fileBuffer = null;
           let currentFileName = "";
           let currentState = null;
@@ -1291,7 +1314,10 @@ const { PDFDocument, degrees } = PDFLib;
           btnRotateAllRight.style.color = "#1e293b";
           btnRotateAllRight.style.border = "1px solid var(--border)";
           btnRotateAllRight.style.marginTop = "0";
-          btnRotateAllRight.textContent = "⟳ Girar Todas 90°";
+          btnRotateAllRight.style.display = "inline-flex";
+          btnRotateAllRight.style.alignItems = "center";
+          btnRotateAllRight.style.gap = "6px";
+          btnRotateAllRight.innerHTML = `${SVG_ICONS.rotateCw} Girar Todas 90°`;
           btnRotateAllRight.disabled = true;
           btnRotateAllRight.onclick = () => {
             if (!currentState) return;
@@ -1315,7 +1341,10 @@ const { PDFDocument, degrees } = PDFLib;
           btnRotateAllLeft.style.color = "#1e293b";
           btnRotateAllLeft.style.border = "1px solid var(--border)";
           btnRotateAllLeft.style.marginTop = "0";
-          btnRotateAllLeft.textContent = "↺ Girar Todas -90°";
+          btnRotateAllLeft.style.display = "inline-flex";
+          btnRotateAllLeft.style.alignItems = "center";
+          btnRotateAllLeft.style.gap = "6px";
+          btnRotateAllLeft.innerHTML = `${SVG_ICONS.rotateCcw} Girar Todas -90°`;
           btnRotateAllLeft.disabled = true;
           btnRotateAllLeft.onclick = () => {
             if (!currentState) return;
@@ -1400,12 +1429,12 @@ const { PDFDocument, degrees } = PDFLib;
             fileBarWrap.innerHTML = `
               <div class="loaded-file-bar">
                 <div class="loaded-file-info">
-                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
                   <span class="loaded-file-name" title="${name}">${name}</span>
                   <span class="loaded-file-pages">(${totalPages} pág.)</span>
                 </div>
                 <button type="button" class="btn-clear-file" title="Fechar este arquivo">
-                  ✕ Fechar arquivo
+                  ${SVG_ICONS.close} Fechar arquivo
                 </button>
               </div>
             `;
@@ -1437,12 +1466,12 @@ const { PDFDocument, degrees } = PDFLib;
                 );
                 renderLoadedBar(currentFileName, currentState.numPages);
               } catch (err) {
-                setStatus(status, "⚠️ " + err.message, "error");
+                setStatus(status, err.message, "error");
                 return;
               }
               setStatus(
                 status,
-                "Clique no botão ⟳ em cada página ou use os botões abaixo para girar todas.",
+                "Clique no botão de girar em cada página ou use os botões abaixo para girar todas.",
                 "",
               );
               btnRotateAllRight.disabled = false;
@@ -1460,7 +1489,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- PDF PARA JPG ----------
         RENDERERS.pdf2jpg = function (container) {
           container.innerHTML =
-            '<h2>🖼️ PDF para JPG</h2><p class="hint">Selecione as páginas que deseja converter. Use ⟳ para girar antes de baixar.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.pdf2jpg}</span> PDF para JPG</h2><p class="hint">Selecione as páginas que deseja converter. Use o botão de girar antes de baixar se necessário.</p>`;
 
           const selectionStyle = document.createElement("style");
           selectionStyle.textContent = `
@@ -1490,12 +1519,12 @@ const { PDFDocument, degrees } = PDFLib;
             fileBarWrap.innerHTML = `
               <div class="loaded-file-bar">
                 <div class="loaded-file-info">
-                  <span class="loaded-file-icon">📄</span>
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
                   <span class="loaded-file-name" title="${name}">${name}</span>
                   <span class="loaded-file-pages">(${totalPages} pág.)</span>
                 </div>
                 <button type="button" class="btn-clear-file" title="Fechar este arquivo">
-                  ✕ Fechar arquivo
+                  ${SVG_ICONS.close} Fechar arquivo
                 </button>
               </div>
             `;
@@ -1576,11 +1605,11 @@ const { PDFDocument, degrees } = PDFLib;
 
                   const check = document.createElement("span");
                   check.className = "pdf2jpg-check";
-                  check.textContent = "✓";
+                  check.innerHTML = SVG_ICONS.check;
                   const rotBtn = document.createElement("button");
                   rotBtn.type = "button";
                   rotBtn.className = "rotate-btn";
-                  rotBtn.textContent = "⟳";
+                  rotBtn.innerHTML = SVG_ICONS.rotateCw;
                   rotBtn.title = "Girar página";
                   rotBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -1674,7 +1703,7 @@ const { PDFDocument, degrees } = PDFLib;
         // ---------- JPG PARA PDF ----------
         RENDERERS.jpg2pdf = function (container) {
           container.innerHTML =
-            '<h2>📷 JPG para PDF</h2><p class="hint">Selecione uma ou mais imagens (JPG/PNG). Arraste os cartões pelo mouse (ou use as setas) para reordenar — essa será a ordem das páginas no PDF final.</p>';
+            `<h2><span class="workspace-title-icon">${SVG_ICONS.jpg2pdf}</span> JPG para PDF</h2><p class="hint">Selecione uma ou mais imagens (JPG/PNG). Arraste os cartões pelo mouse (ou use as setas) para reordenar — essa será a ordem das páginas no PDF final.</p>`;
           let files = []; // { file, url, id }
           let uid = 0;
           let orientation = "vertical"; // 'vertical' | 'horizontal'
@@ -1686,9 +1715,15 @@ const { PDFDocument, degrees } = PDFLib;
           const seg = document.createElement("div");
           seg.className = "segmented";
           const btnV = document.createElement("button");
-          btnV.textContent = "📄 Vertical";
+          btnV.style.display = "inline-flex";
+          btnV.style.alignItems = "center";
+          btnV.style.gap = "6px";
+          btnV.innerHTML = `${SVG_ICONS.file} Vertical`;
           const btnH = document.createElement("button");
-          btnH.textContent = "🖼️ Horizontal";
+          btnH.style.display = "inline-flex";
+          btnH.style.alignItems = "center";
+          btnH.style.gap = "6px";
+          btnH.innerHTML = `${SVG_ICONS.image} Horizontal`;
           function updateSegUI() {
             btnV.classList.toggle(
               "active",
@@ -1741,11 +1776,10 @@ const { PDFDocument, degrees } = PDFLib;
               moveWrap.style.gap = "4px";
               moveWrap.style.paddingBottom = "8px";
               const leftBtn = document.createElement("button");
-              leftBtn.textContent = "←";
+              leftBtn.className = "order-btn";
+              leftBtn.innerHTML = SVG_ICONS.chevronLeft;
               leftBtn.title = "Mover para a esquerda";
               leftBtn.disabled = i === 0;
-              leftBtn.style.cssText =
-                "border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;padding:2px 8px;";
               leftBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (i === 0) return;
@@ -1753,11 +1787,10 @@ const { PDFDocument, degrees } = PDFLib;
                 renderThumbsList();
               });
               const rightBtn = document.createElement("button");
-              rightBtn.textContent = "→";
+              rightBtn.className = "order-btn";
+              rightBtn.innerHTML = SVG_ICONS.chevronRight;
               rightBtn.title = "Mover para a direita";
               rightBtn.disabled = i === files.length - 1;
-              rightBtn.style.cssText =
-                "border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;padding:2px 8px;";
               rightBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (i === files.length - 1) return;
@@ -1767,7 +1800,7 @@ const { PDFDocument, degrees } = PDFLib;
               // Rotate button per image
               const rotBtn = document.createElement("button");
               rotBtn.className = "card-rot-btn";
-              rotBtn.textContent = "⟳";
+              rotBtn.innerHTML = SVG_ICONS.rotateCw;
               rotBtn.title = "Girar 90°";
               rotBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1781,7 +1814,7 @@ const { PDFDocument, degrees } = PDFLib;
 
               const rm = document.createElement("button");
               rm.className = "thumb-rm-btn";
-              rm.textContent = "✕";
+              rm.innerHTML = SVG_ICONS.close;
               rm.title = "Remover";
               rm.addEventListener("click", (e) => {
                 e.stopPropagation();
