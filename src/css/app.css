@@ -632,28 +632,8 @@ p.subtitle {
 }
 
 /* ==========================================================================
-   Saved File Action Cards & Floating Toast (macOS Native Experience)
+   Saved File Floating Toast (macOS Native Experience)
    ========================================================================== */
-
-.saved-file-box {
-  margin-top: 18px;
-  background: var(--card);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-app-region: no-drag;
-}
-
-@keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 .saved-file-meta {
   display: flex;

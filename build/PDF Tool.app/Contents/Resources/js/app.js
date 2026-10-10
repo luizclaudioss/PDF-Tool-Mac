@@ -181,62 +181,11 @@ const { PDFDocument, degrees } = PDFLib;
         }
 
         function renderSavedFileSuccess({ filename, fullPath, isFolder, count, container }) {
+          // Limpa qualquer mensagem de status inline anterior
           const targetContainer = container || currentActiveStatusEl;
           if (targetContainer) {
             targetContainer.innerHTML = "";
-            targetContainer.className = "status-container";
-
-            const box = document.createElement("div");
-            box.className = "saved-file-box";
-
-            const meta = document.createElement("div");
-            meta.className = "saved-file-meta";
-
-            const badge = document.createElement("div");
-            badge.className = "saved-file-badge";
-            badge.textContent = "✓";
-            meta.appendChild(badge);
-
-            const textWrap = document.createElement("div");
-            textWrap.className = "saved-file-text";
-
-            const statusTitle = document.createElement("div");
-            statusTitle.className = "saved-file-status";
-            statusTitle.textContent = isFolder
-              ? `✓ ${count || "Arquivos"} imagens salvas com sucesso!`
-              : "✓ Arquivo salvo com sucesso!";
-            textWrap.appendChild(statusTitle);
-
-            const pathLabel = document.createElement("div");
-            pathLabel.className = "saved-file-path";
-            pathLabel.textContent = filename || (fullPath ? fullPath.split("/").pop() : "");
-            pathLabel.title = fullPath || filename;
-            textWrap.appendChild(pathLabel);
-
-            meta.appendChild(textWrap);
-            box.appendChild(meta);
-
-            const btns = document.createElement("div");
-            btns.className = "saved-file-buttons";
-
-            if (!isFolder && fullPath) {
-              const openBtn = document.createElement("button");
-              openBtn.className = "btn-open-file";
-              openBtn.innerHTML = "<span>👁️</span> Abrir Arquivo";
-              openBtn.onclick = () => openNativeFile(fullPath);
-              btns.appendChild(openBtn);
-            }
-
-            if (fullPath) {
-              const revealBtn = document.createElement("button");
-              revealBtn.className = "btn-reveal-file";
-              revealBtn.innerHTML = `<span>📂</span> ${isFolder ? "Abrir Pasta" : "Mostrar no Finder"}`;
-              revealBtn.onclick = () => revealNativeFile(fullPath);
-              btns.appendChild(revealBtn);
-            }
-
-            box.appendChild(btns);
-            targetContainer.appendChild(box);
+            targetContainer.className = "status";
           }
 
           // Notificação flutuante (Toast)
