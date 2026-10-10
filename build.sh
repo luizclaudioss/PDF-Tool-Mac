@@ -32,11 +32,12 @@ cp -R "src/css" "${RESOURCES_DIR}/"
 cp -R "src/js" "${RESOURCES_DIR}/"
 cp -R "src/vendor" "${RESOURCES_DIR}/"
 
-# 5. Compilar binário Swift com swiftc
-echo "⚡ Compilando binário nativo Swift..."
-swiftc -O \
-    mac/main.swift \
-    -o "${MACOS_DIR}/${APP_NAME}"
+# 5. Compilar binário Swift Universal (Apple Silicon arm64 + Intel x86_64)
+echo "⚡ Compilando binário nativo Swift Universal (arm64 + x86_64)..."
+swiftc -O -target arm64-apple-macos11.0 mac/main.swift -o "${MACOS_DIR}/${APP_NAME}_arm64"
+swiftc -O -target x86_64-apple-macos11.0 mac/main.swift -o "${MACOS_DIR}/${APP_NAME}_x86_64"
+lipo -create -output "${MACOS_DIR}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}_arm64" "${MACOS_DIR}/${APP_NAME}_x86_64"
+rm -f "${MACOS_DIR}/${APP_NAME}_arm64" "${MACOS_DIR}/${APP_NAME}_x86_64"
 
 chmod +x "${MACOS_DIR}/${APP_NAME}"
 

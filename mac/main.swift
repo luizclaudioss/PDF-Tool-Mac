@@ -24,6 +24,40 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         return true
     }
 
+    private var pendingExternalFilePath: String?
+
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        guard let first = filenames.first else { return }
+        handleExternalFile(path: first)
+    }
+
+    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        handleExternalFile(path: filename)
+        return true
+    }
+
+    private func handleExternalFile(path: String) {
+        guard webView != nil else {
+            pendingExternalFilePath = path
+            return
+        }
+        let url = URL(fileURLWithPath: path)
+        let filename = url.lastPathComponent
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+        let escapedPath = url.path
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+        var base64 = ""
+        if let data = try? Data(contentsOf: url) {
+            base64 = data.base64EncodedString()
+        }
+        let js = "window.onExternalFileOpen && window.onExternalFileOpen('\(filename)', '\(escapedPath)', '\(base64)');"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.webView?.evaluateJavaScript(js, completionHandler: nil)
+        }
+    }
+
     // MARK: - Menu Setup
     private func setupMainMenu() {
         let mainMenu = NSMenu()
@@ -45,7 +79,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         appMenu.addItem(NSMenuItem.separator())
         appMenu.addItem(withTitle: "Encerrar PDF Tool", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
-        // 2. Edit Menu (Crucial para copiar, colar, selecionar em inputs)
+        // 2. Arquivo Menu (Atalhos de Teclado nativos ⌘O, ⌘S, ⌘W)
+        let fileMenuItem = NSMenuItem()
+        mainMenu.addItem(fileMenuItem)
+        let fileMenu = NSMenu(title: "Arquivo")
+        fileMenuItem.submenu = fileMenu
+        fileMenu.addItem(withTitle: "Selecionar Arquivo...", action: #selector(triggerOpenFileShortcut), keyEquivalent: "o")
+        fileMenu.addItem(withTitle: "Executar Ação", action: #selector(triggerSaveShortcut), keyEquivalent: "s")
+        fileMenu.addItem(NSMenuItem.separator())
+        fileMenu.addItem(withTitle: "Voltar às Ferramentas", action: #selector(triggerBackShortcut), keyEquivalent: "w")
+
+        // 3. Edit Menu (Crucial para copiar, colar, selecionar em inputs)
         let editMenuItem = NSMenuItem()
         mainMenu.addItem(editMenuItem)
         let editMenu = NSMenu(title: "Editar")
@@ -58,7 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         editMenu.addItem(withTitle: "Colar", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         editMenu.addItem(withTitle: "Selecionar Tudo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
-        // 3. View Menu
+        // 4. View Menu
         let viewMenuItem = NSMenuItem()
         mainMenu.addItem(viewMenuItem)
         let viewMenu = NSMenu(title: "Visualizar")
@@ -69,7 +113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         viewMenu.addItem(withTitle: "Aumentar Zoom", action: #selector(zoomIn), keyEquivalent: "+")
         viewMenu.addItem(withTitle: "Diminuir Zoom", action: #selector(zoomOut), keyEquivalent: "-")
 
-        // 4. Window Menu
+        // 5. Window Menu
         let windowMenuItem = NSMenuItem()
         mainMenu.addItem(windowMenuItem)
         let windowMenu = NSMenu(title: "Janela")
@@ -77,6 +121,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         windowMenu.addItem(withTitle: "Minimizar", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         windowMenu.addItem(NSMenuItem.separator())
         windowMenu.addItem(withTitle: "Fechar", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+    }
+
+    @objc private func triggerOpenFileShortcut() {
+        webView?.evaluateJavaScript("window.triggerOpenFileShortcut && window.triggerOpenFileShortcut();", completionHandler: nil)
+    }
+
+    @objc private func triggerSaveShortcut() {
+        webView?.evaluateJavaScript("window.triggerSaveShortcut && window.triggerSaveShortcut();", completionHandler: nil)
+    }
+
+    @objc private func triggerBackShortcut() {
+        webView?.evaluateJavaScript("window.goHome && window.goHome();", completionHandler: nil)
     }
 
     @objc private func showAbout() {
@@ -130,11 +186,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         contentController.add(self, name: "nativeRevealFile")
         config.userContentController = contentController
         
-        // Habilitar suporte a inspecionar se necessário
+        // Habilitar suporte a inspecionar
         if #available(macOS 13.3, *) {
-            #if DEBUG
             config.preferences.setValue(true, forKey: "developerExtrasEnabled")
-            #endif
         }
 
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
@@ -230,6 +284,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
             savePanel.title = "Salvar Arquivo"
             savePanel.prompt = "Salvar"
 
+            if let lastPath = UserDefaults.standard.string(forKey: "lastChosenDirectoryPath"),
+               FileManager.default.fileExists(atPath: lastPath) {
+                savePanel.directoryURL = URL(fileURLWithPath: lastPath)
+            }
+
             let ext = (filename as NSString).pathExtension
             if !ext.isEmpty {
                 if #available(macOS 11.0, *) {
@@ -243,6 +302,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
 
             savePanel.beginSheetModal(for: self.window) { response in
                 if response == .OK, let targetURL = savePanel.url {
+                    UserDefaults.standard.set(targetURL.deletingLastPathComponent().path, forKey: "lastChosenDirectoryPath")
                     do {
                         try data.write(to: targetURL)
                         let escapedName = targetURL.lastPathComponent
@@ -276,8 +336,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
             openPanel.title = "Escolha a pasta para salvar as imagens"
             openPanel.prompt = "Salvar Aqui"
 
+            if let lastPath = UserDefaults.standard.string(forKey: "lastChosenDirectoryPath"),
+               FileManager.default.fileExists(atPath: lastPath) {
+                openPanel.directoryURL = URL(fileURLWithPath: lastPath)
+            }
+
             openPanel.beginSheetModal(for: self.window) { response in
                 if response == .OK, let folderURL = openPanel.url {
+                    UserDefaults.standard.set(folderURL.path, forKey: "lastChosenDirectoryPath")
                     var savedCount = 0
                     for item in files {
                         if let filename = item["filename"] as? String,
@@ -308,7 +374,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         }
     }
 
-        // MARK: - WKUIDelegate (File Picker Open Panel & Alerts)
+    // MARK: - WKUIDelegate (File Picker Open Panel & Alerts)
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let openPanel = NSOpenPanel()
         openPanel.allowsMultipleSelection = parameters.allowsMultipleSelection
@@ -317,18 +383,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKUI
         openPanel.title = "Selecionar Arquivo"
         openPanel.prompt = "Selecionar"
 
+        if let lastPath = UserDefaults.standard.string(forKey: "lastChosenDirectoryPath"),
+           FileManager.default.fileExists(atPath: lastPath) {
+            openPanel.directoryURL = URL(fileURLWithPath: lastPath)
+        }
+
+        let finishHandler: (NSApplication.ModalResponse) -> Void = { response in
+            if response == .OK, let first = openPanel.urls.first {
+                UserDefaults.standard.set(first.deletingLastPathComponent().path, forKey: "lastChosenDirectoryPath")
+                completionHandler(openPanel.urls)
+            } else {
+                completionHandler(nil)
+            }
+        }
+
         if let win = self.window {
-            openPanel.beginSheetModal(for: win) { response in
-                completionHandler(response == .OK ? openPanel.urls : nil)
-            }
+            openPanel.beginSheetModal(for: win, completionHandler: finishHandler)
         } else {
-            openPanel.begin { response in
-                completionHandler(response == .OK ? openPanel.urls : nil)
-            }
+            openPanel.begin(completionHandler: finishHandler)
         }
     }
 
-// MARK: - WKUIDelegate (Native Alerts)
+    // MARK: - WKNavigationDelegate
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if let pending = pendingExternalFilePath {
+            pendingExternalFilePath = nil
+            handleExternalFile(path: pending)
+        }
+    }
+
+    // MARK: - WKUIDelegate (Native Alerts)
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alert = NSAlert()
         alert.messageText = "PDF Tool"

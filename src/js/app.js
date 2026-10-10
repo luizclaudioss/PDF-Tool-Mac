@@ -55,8 +55,11 @@ const { PDFDocument, degrees } = PDFLib;
         renderHome();
 
         function goHome() {
+          const overlay = document.getElementById("save-toast-overlay");
+          if (overlay) overlay.classList.add("hidden");
           currentActiveStatusEl = null;
           currentSaveBtn = null;
+          window.currentDropzoneHandler = null;
           document.getElementById("home-screen").style.display =
             "block";
           document
@@ -76,11 +79,19 @@ const { PDFDocument, degrees } = PDFLib;
           RENDERERS[id](content);
         }
 
+        function getBaseFilename(filename, fallback = "documento") {
+          if (!filename) return fallback;
+          const dot = filename.lastIndexOf(".");
+          if (dot <= 0) return filename;
+          return filename.substring(0, dot);
+        }
+
         function makeDropzone(
           container,
           { multiple, accept, label },
           onFiles,
         ) {
+          window.currentDropzoneHandler = onFiles;
           const dz = document.createElement("div");
           dz.className = "dropzone";
 
@@ -134,16 +145,6 @@ const { PDFDocument, degrees } = PDFLib;
         function setStatus(el, msg, type) {
           el.textContent = msg;
           el.className = "status" + (type ? " " + type : "");
-        }
-
-        function downloadBlob(blob, filename, container) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = filename;
-          a.className = "download-link";
-          a.textContent = "⬇ Baixar " + filename;
-          container.appendChild(a);
         }
 
         function blobToBase64(blob) {
@@ -260,11 +261,6 @@ const { PDFDocument, degrees } = PDFLib;
 
             toast.appendChild(btns);
             overlay.classList.remove("hidden");
-
-            clearTimeout(toast.hideTimeout);
-            toast.hideTimeout = setTimeout(() => {
-              closeToastAndGoHome();
-            }, 30000);
           }
         }
 
@@ -321,71 +317,6 @@ const { PDFDocument, degrees } = PDFLib;
             r.onerror = rej;
             r.readAsArrayBuffer(file);
           });
-        }
-
-        // Renderiza uma pré-visualização (miniaturas) de um PDF já gerado, antes do download.
-        async function showResultPreview(
-          container,
-          pdfBytes,
-          { label } = {},
-        ) {
-          const wrap = document.createElement("div");
-          wrap.style.marginTop = "18px";
-          const title = document.createElement("div");
-          title.style.cssText =
-            "font-weight:600;font-size:14px;margin-bottom:8px;";
-          title.textContent =
-            label || "Pré-visualização do resultado:";
-          wrap.appendChild(title);
-
-          const thumbsEl = document.createElement("div");
-          thumbsEl.className = "thumbs";
-          wrap.appendChild(thumbsEl);
-          container.appendChild(wrap);
-
-          try {
-            // pdf.js precisa de uma cópia própria dos bytes (não pode compartilhar buffer com pdf-lib)
-            const pdf = await pdfjsLib.getDocument({
-              data: pdfBytes.slice(0),
-            }).promise;
-            const maxPreview = 20;
-            for (
-              let i = 1;
-              i <= Math.min(pdf.numPages, maxPreview);
-              i++
-            ) {
-              const page = await pdf.getPage(i);
-              const viewport = page.getViewport({ scale: 0.4 });
-              const canvas = document.createElement("canvas");
-              canvas.width = viewport.width;
-              canvas.height = viewport.height;
-              await page.render({
-                canvasContext: canvas.getContext("2d"),
-                viewport,
-              }).promise;
-              const thumb = document.createElement("div");
-              thumb.className = "thumb";
-              thumb.appendChild(canvas);
-              const num = document.createElement("div");
-              num.className = "page-num";
-              num.textContent = "Página " + i;
-              thumb.appendChild(num);
-              thumbsEl.appendChild(thumb);
-            }
-            if (pdf.numPages > maxPreview) {
-              const more = document.createElement("div");
-              more.className = "hint";
-              more.textContent = `+ ${pdf.numPages - maxPreview} páginas não exibidas na pré-visualização.`;
-              wrap.appendChild(more);
-            }
-          } catch (err) {
-            const errEl = document.createElement("div");
-            errEl.className = "hint";
-            errEl.textContent =
-              "Não foi possível gerar a pré-visualização.";
-            wrap.appendChild(errEl);
-          }
-          return wrap;
         }
 
         const RENDERERS = {};
@@ -473,6 +404,9 @@ const { PDFDocument, degrees } = PDFLib;
                 pageCount: pdf.numPages,
               };
             } catch (e) {
+              if (e.name === "PasswordException" || (e.message && e.message.toLowerCase().includes("password"))) {
+                setStatus(status, `⚠️ "${file.name}" está protegido por senha. Remova a proteção para continuar.`, "error");
+              }
               return { url: null, pageCount: "?" };
             }
           }
@@ -613,6 +547,9 @@ const { PDFDocument, degrees } = PDFLib;
                 const doc = await PDFDocument.load(bytes, {
                   ignoreEncryption: true,
                 });
+                if (doc.isEncrypted) {
+                  throw new Error(`O arquivo "${entry.file.name}" está protegido por senha. Remova a proteção antes de combiná-lo.`);
+                }
                 const pages = await merged.copyPages(
                   doc,
                   doc.getPageIndices(),
@@ -632,7 +569,8 @@ const { PDFDocument, degrees } = PDFLib;
                 type: "application/pdf",
               });
               prepareSaveAction(status, btn);
-              await triggerDownload(blob, "unido.pdf");
+              const outName = files.length > 0 ? `${getBaseFilename(files[0].file.name)}_combinado.pdf` : "documentos_combinados.pdf";
+              await triggerDownload(blob, outName);
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
               btn.disabled = false;
@@ -644,16 +582,25 @@ const { PDFDocument, degrees } = PDFLib;
         async function renderThumbs(
           container,
           arrayBuffer,
-          { selectable } = {},
+          { selectable, onProgress } = {},
         ) {
           const thumbsEl = document.createElement("div");
           thumbsEl.className = "thumbs";
           container.appendChild(thumbsEl);
 
-          const loadingTask = pdfjsLib.getDocument({
-            data: arrayBuffer.slice(0),
-          });
-          const pdf = await loadingTask.promise;
+          let pdf;
+          try {
+            const loadingTask = pdfjsLib.getDocument({
+              data: arrayBuffer.slice(0),
+            });
+            pdf = await loadingTask.promise;
+          } catch (err) {
+            if (err.name === "PasswordException" || (err.message && err.message.toLowerCase().includes("password"))) {
+              throw new Error("Este PDF está protegido por senha. Remova a proteção antes de carregá-lo.");
+            }
+            throw err;
+          }
+
           const state = {
             numPages: pdf.numPages,
             selected: new Set(),
@@ -661,6 +608,9 @@ const { PDFDocument, degrees } = PDFLib;
           };
 
           for (let i = 1; i <= pdf.numPages; i++) {
+            if (onProgress) {
+              onProgress(i, pdf.numPages);
+            }
             state.rotations[i] = 0;
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale: 0.35 });
@@ -718,20 +668,31 @@ const { PDFDocument, degrees } = PDFLib;
           container.innerHTML =
             '<h2>✂️ Extrair páginas</h2><p class="hint">Selecione as páginas que você quer extrair para um novo PDF.</p>';
           let fileBuffer = null;
+          let currentFileName = "";
 
           makeDropzone(
             container,
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
+              currentFileName = newFiles[0].name;
               fileBuffer = await readAsArrayBuffer(newFiles[0]);
               thumbArea.innerHTML = "";
               setStatus(status, "Carregando páginas...", "");
-              const state = await renderThumbs(
-                thumbArea,
-                fileBuffer,
-                { selectable: true },
-              );
+              let state;
+              try {
+                state = await renderThumbs(
+                  thumbArea,
+                  fileBuffer,
+                  {
+                    selectable: true,
+                    onProgress: (cur, tot) => setStatus(status, `Carregando miniaturas (${cur} de ${tot})...`, "")
+                  },
+                );
+              } catch (err) {
+                setStatus(status, "⚠️ " + err.message, "error");
+                return;
+              }
               setStatus(
                 status,
                 "Clique nas páginas que deseja extrair.",
@@ -753,6 +714,9 @@ const { PDFDocument, degrees } = PDFLib;
                   const src = await PDFDocument.load(fileBuffer, {
                     ignoreEncryption: true,
                   });
+                  if (src.isEncrypted) {
+                    throw new Error("Este PDF está protegido por senha. Remova a proteção antes de manipulá-lo.");
+                  }
                   const out = await PDFDocument.create();
                   const sortedPages = Array.from(state.selected)
                     .sort((a, b) => a - b)
@@ -775,7 +739,8 @@ const { PDFDocument, degrees } = PDFLib;
                     type: "application/pdf",
                   });
                   prepareSaveAction(status, btn);
-                  await triggerDownload(blob, "extraido.pdf");
+                  const outName = `${getBaseFilename(currentFileName, "extraido")}_extraido.pdf`;
+                  await triggerDownload(blob, outName);
                 } catch (err) {
                   setStatus(status, "Erro: " + err.message, "error");
                   btn.disabled = false;
@@ -801,6 +766,7 @@ const { PDFDocument, degrees } = PDFLib;
           container.innerHTML =
             '<h2>🗑️ Remover páginas</h2><p class="hint">Clique no ícone da lixeira 🗑️ para sinalizar a página em vermelho (marcada para exclusão). Se precisar, você pode clicar em ↩️ Restaurar a qualquer momento.</p>';
           let fileBuffer = null;
+          let currentFileName = "";
           let pages = [];
 
           const thumbsArea = document.createElement("div");
@@ -818,6 +784,7 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
+              currentFileName = newFiles[0].name;
               fileBuffer = await readAsArrayBuffer(newFiles[0]);
               thumbsArea.innerHTML = "";
               pages = [];
@@ -827,9 +794,19 @@ const { PDFDocument, degrees } = PDFLib;
                 const loadingTask = pdfjsLib.getDocument({
                   data: fileBuffer.slice(0),
                 });
-                const pdf = await loadingTask.promise;
+                let pdf;
+                try {
+                  pdf = await loadingTask.promise;
+                } catch (loadErr) {
+                  if (loadErr.name === "PasswordException" || (loadErr.message && loadErr.message.toLowerCase().includes("password"))) {
+                    setStatus(status, "⚠️ Este PDF está protegido por senha. Remova a proteção antes de carregá-lo.", "error");
+                    return;
+                  }
+                  throw loadErr;
+                }
 
                 for (let i = 1; i <= pdf.numPages; i++) {
+                  setStatus(status, `Carregando miniaturas (${i} de ${pdf.numPages})...`, "");
                   const page = await pdf.getPage(i);
                   const viewport = page.getViewport({ scale: 0.35 });
                   const canvas = document.createElement("canvas");
@@ -974,6 +951,9 @@ const { PDFDocument, degrees } = PDFLib;
               const src = await PDFDocument.load(fileBuffer, {
                 ignoreEncryption: true,
               });
+              if (src.isEncrypted) {
+                throw new Error("Este PDF está protegido por senha. Remova a proteção antes de manipulá-lo.");
+              }
               const out = await PDFDocument.create();
               const keepIndices = activePages.map((p) => p.num - 1);
               const copied = await out.copyPages(src, keepIndices);
@@ -994,7 +974,8 @@ const { PDFDocument, degrees } = PDFLib;
                 type: "application/pdf",
               });
               prepareSaveAction(status, btn);
-              await triggerDownload(blob, "sem_paginas.pdf");
+              const outName = `${getBaseFilename(currentFileName, "documento")}_editado.pdf`;
+              await triggerDownload(blob, outName);
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
               btn.disabled = false;
@@ -1007,6 +988,7 @@ const { PDFDocument, degrees } = PDFLib;
           container.innerHTML =
             '<h2>🔄 Girar PDF</h2><p class="hint">Clique no botão ⟳ em cada página para girá-la 90° individualmente, ou use os botões abaixo para girar todas de uma vez.</p>';
           let fileBuffer = null;
+          let currentFileName = "";
           let currentState = null;
 
           makeDropzone(
@@ -1014,14 +996,23 @@ const { PDFDocument, degrees } = PDFLib;
             { label: "o PDF" },
             async (newFiles) => {
               if (!newFiles[0]) return;
+              currentFileName = newFiles[0].name;
               fileBuffer = await readAsArrayBuffer(newFiles[0]);
               thumbArea.innerHTML = "";
               setStatus(status, "Carregando páginas...", "");
-              currentState = await renderThumbs(
-                thumbArea,
-                fileBuffer,
-                { selectable: false },
-              );
+              try {
+                currentState = await renderThumbs(
+                  thumbArea,
+                  fileBuffer,
+                  {
+                    selectable: false,
+                    onProgress: (cur, tot) => setStatus(status, `Carregando miniaturas (${cur} de ${tot})...`, "")
+                  },
+                );
+              } catch (err) {
+                setStatus(status, "⚠️ " + err.message, "error");
+                return;
+              }
               setStatus(
                 status,
                 "Clique no botão ⟳ em cada página ou use os botões abaixo para girar todas.",
@@ -1110,6 +1101,9 @@ const { PDFDocument, degrees } = PDFLib;
               const src = await PDFDocument.load(fileBuffer, {
                 ignoreEncryption: true,
               });
+              if (src.isEncrypted) {
+                throw new Error("Este PDF está protegido por senha. Remova a proteção antes de manipulá-lo.");
+              }
               const pages = src.getPages();
               pages.forEach((page, idx) => {
                 const rot = currentState.rotations[idx + 1] || 0;
@@ -1123,7 +1117,8 @@ const { PDFDocument, degrees } = PDFLib;
                 type: "application/pdf",
               });
               prepareSaveAction(status, btn);
-              await triggerDownload(blob, "rotacionado.pdf");
+              const outName = `${getBaseFilename(currentFileName, "documento")}_rotacionado.pdf`;
+              await triggerDownload(blob, outName);
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
               btn.disabled = false;
@@ -1151,9 +1146,9 @@ const { PDFDocument, degrees } = PDFLib;
                       .pdf2jpg-toolbar button{padding:7px 11px;border:1px solid #d0d5dd;background:#fff;color:#344054;border-radius:7px;cursor:pointer;font-weight:600}
                       .pdf2jpg-count{font-size:12px;color:#475467;font-weight:700;margin-left:4px}
                       .pdf2jpg-thumb{position:relative;cursor:pointer;transition:.16s ease;border:2px solid transparent!important}
-                      .pdf2jpg-thumb.selected{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+                      .pdf2jpg-thumb.selected{border-color:var(--green)!important;box-shadow:0 0 0 3px var(--green-glow)}
                       .pdf2jpg-check{position:absolute;top:7px;right:7px;width:23px;height:23px;border-radius:50%;border:2px solid #98a2b3;background:#fff;color:transparent;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;z-index:3}
-                      .pdf2jpg-thumb.selected .pdf2jpg-check{background:#2563eb;border-color:#2563eb;color:#fff}
+                      .pdf2jpg-thumb.selected .pdf2jpg-check{background:var(--green);border-color:var(--green);color:#fff}
                     `;
           container.appendChild(selectionStyle);
 
@@ -1167,9 +1162,19 @@ const { PDFDocument, degrees } = PDFLib;
               if (!newFiles[0]) return;
               const buf = await readAsArrayBuffer(newFiles[0]);
               resultArea.innerHTML = "";
-              setStatus(status, "Convertendo páginas...", "");
+              setStatus(status, "Carregando páginas...", "");
               try {
-                const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+                let pdf;
+                try {
+                  pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+                } catch (pdfErr) {
+                  if (pdfErr.name === "PasswordException" || (pdfErr.message && pdfErr.message.toLowerCase().includes("password"))) {
+                    setStatus(status, "⚠️ Este PDF está protegido por senha. Remova a proteção antes de convertê-lo.", "error");
+                    return;
+                  }
+                  throw pdfErr;
+                }
+
                 const toolbar = document.createElement("div");
                 toolbar.className = "pdf2jpg-toolbar";
                 const selectAllBtn = document.createElement("button");
@@ -1201,6 +1206,7 @@ const { PDFDocument, degrees } = PDFLib;
                 };
 
                 for (let i = 1; i <= pdf.numPages; i++) {
+                  setStatus(status, `Carregando miniaturas (${i} de ${pdf.numPages})...`, "");
                   pageRotations[i] = 0;
                   selectedPages.add(i);
                   const page = await pdf.getPage(i);
@@ -1297,7 +1303,8 @@ const { PDFDocument, degrees } = PDFLib;
                       const blob = await new Promise((res) =>
                         finalCanvas.toBlob(res, "image/jpeg", 0.92),
                       );
-                      exportFiles.push({ blob, filename: `pagina-${i}.jpg` });
+                      const baseName = getBaseFilename(newFiles[0].name, "documento");
+                      exportFiles.push({ blob, filename: `${baseName}_pagina_${i}.jpg` });
                     }
                     prepareSaveAction(status, dlBtn);
                     if (exportFiles.length === 1) {
@@ -1573,14 +1580,15 @@ const { PDFDocument, degrees } = PDFLib;
 
               // Download automático e imediato
               prepareSaveAction(status, btn);
-              await triggerDownload(blob, "imagens.pdf");
+              const outName = files.length > 0 ? `${getBaseFilename(files[0].file.name)}_convertido.pdf` : "imagens_convertidas.pdf";
+              await triggerDownload(blob, outName);
             } catch (err) {
               setStatus(status, "Erro: " + err.message, "error");
               btn.disabled = false;
             }
           });
         };
-// Prevenir comportamento padrao do navegador ao arrastar arquivos na janela
+// Prevenir comportamento padrão do navegador ao arrastar arquivos na janela
 window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => e.preventDefault());
 
@@ -1615,6 +1623,62 @@ document.addEventListener("keydown", (e) => {
     const overlay = document.getElementById("save-toast-overlay");
     if (overlay && !overlay.classList.contains("hidden")) {
       closeToastAndGoHome();
+    } else if (document.getElementById("workspace").classList.contains("active")) {
+      goHome();
     }
   }
 });
+
+// Atalhos nativos acionados pelo menu Arquivo (mac/main.swift)
+window.triggerOpenFileShortcut = function () {
+  const overlay = document.getElementById("save-toast-overlay");
+  if (overlay && !overlay.classList.contains("hidden")) return;
+  const activeInput = document.querySelector(".workspace.active .dropzone-input");
+  if (activeInput) {
+    activeInput.click();
+  } else {
+    openTool("split");
+    setTimeout(() => {
+      document.querySelector(".workspace.active .dropzone-input")?.click();
+    }, 120);
+  }
+};
+
+window.triggerSaveShortcut = function () {
+  const overlay = document.getElementById("save-toast-overlay");
+  if (overlay && !overlay.classList.contains("hidden")) return;
+  if (currentSaveBtn && !currentSaveBtn.disabled) {
+    currentSaveBtn.click();
+  } else {
+    const btn = document.querySelector(".workspace.active .action-btn:not(:disabled)");
+    if (btn) btn.click();
+  }
+};
+
+// Integração com arquivos abertos via Dock ou Finder
+window.onExternalFileOpen = function (filename, fullPath, base64) {
+  if (!base64) return;
+  try {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const mime = filename.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg";
+    const file = new File([bytes], filename, { type: mime });
+
+    const ws = document.getElementById("workspace");
+    if (ws && ws.classList.contains("active") && window.currentDropzoneHandler) {
+      window.currentDropzoneHandler([file]);
+    } else {
+      openTool("split");
+      setTimeout(() => {
+        if (window.currentDropzoneHandler) {
+          window.currentDropzoneHandler([file]);
+        }
+      }, 100);
+    }
+  } catch (err) {
+    console.warn("Erro ao carregar arquivo externo:", err);
+  }
+};
