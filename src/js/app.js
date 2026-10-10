@@ -180,6 +180,14 @@ const { PDFDocument, degrees } = PDFLib;
           }
         }
 
+        function closeToastAndGoHome() {
+          const overlay = document.getElementById("save-toast-overlay");
+          if (overlay) overlay.classList.add("hidden");
+          const toast = document.getElementById("save-toast");
+          if (toast && toast.hideTimeout) clearTimeout(toast.hideTimeout);
+          goHome();
+        }
+
         function renderSavedFileSuccess({ filename, fullPath, isFolder, count, container }) {
           // Limpa qualquer mensagem de status inline anterior
           const targetContainer = container || currentActiveStatusEl;
@@ -188,9 +196,10 @@ const { PDFDocument, degrees } = PDFLib;
             targetContainer.className = "status";
           }
 
-          // Notificação flutuante (Toast)
+          // Modal Toast na frente com Overlay
+          const overlay = document.getElementById("save-toast-overlay");
           const toast = document.getElementById("save-toast");
-          if (toast) {
+          if (toast && overlay) {
             toast.innerHTML = "";
 
             const meta = document.createElement("div");
@@ -211,7 +220,8 @@ const { PDFDocument, degrees } = PDFLib;
 
             const pathLabel = document.createElement("div");
             pathLabel.className = "saved-file-path";
-            pathLabel.textContent = filename;
+            pathLabel.textContent = filename || (fullPath ? fullPath.split("/").pop() : "");
+            pathLabel.title = fullPath || filename;
             textWrap.appendChild(pathLabel);
             meta.appendChild(textWrap);
             toast.appendChild(meta);
@@ -223,7 +233,10 @@ const { PDFDocument, degrees } = PDFLib;
               const openBtn = document.createElement("button");
               openBtn.className = "btn-open-file";
               openBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> <span>Abrir</span>`;
-              openBtn.onclick = () => openNativeFile(fullPath);
+              openBtn.onclick = () => {
+                openNativeFile(fullPath);
+                closeToastAndGoHome();
+              };
               btns.appendChild(openBtn);
             }
 
@@ -231,23 +244,27 @@ const { PDFDocument, degrees } = PDFLib;
               const revealBtn = document.createElement("button");
               revealBtn.className = "btn-reveal-file";
               revealBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>${isFolder ? "Pasta" : "Finder"}</span>`;
-              revealBtn.onclick = () => revealNativeFile(fullPath);
+              revealBtn.onclick = () => {
+                revealNativeFile(fullPath);
+                closeToastAndGoHome();
+              };
               btns.appendChild(revealBtn);
             }
 
             const closeBtn = document.createElement("button");
             closeBtn.className = "toast-close-btn";
             closeBtn.textContent = "×";
-            closeBtn.onclick = () => toast.classList.add("hidden");
+            closeBtn.title = "Fechar e voltar ao início";
+            closeBtn.onclick = () => closeToastAndGoHome();
             btns.appendChild(closeBtn);
 
             toast.appendChild(btns);
-            toast.classList.remove("hidden");
+            overlay.classList.remove("hidden");
 
             clearTimeout(toast.hideTimeout);
             toast.hideTimeout = setTimeout(() => {
-              toast.classList.add("hidden");
-            }, 18000);
+              closeToastAndGoHome();
+            }, 30000);
           }
         }
 
@@ -1584,3 +1601,20 @@ window.onNativeSaveCancelled = function () {
     setStatus(currentActiveStatusEl, "Operação cancelada.", "");
   }
 };
+
+// Fechar modal toast e retornar à tela inicial ao clicar fora ou pressionar Escape
+document.addEventListener("click", (e) => {
+  const overlay = document.getElementById("save-toast-overlay");
+  if (overlay && !overlay.classList.contains("hidden") && e.target === overlay) {
+    closeToastAndGoHome();
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const overlay = document.getElementById("save-toast-overlay");
+    if (overlay && !overlay.classList.contains("hidden")) {
+      closeToastAndGoHome();
+    }
+  }
+});
