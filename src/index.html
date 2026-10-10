@@ -12,11 +12,29 @@
 <body>
 
   <main>
-    <!-- Tela Inicial com os 6 cards de ferramentas -->
+    <!-- Tela Inicial com os 10 cards de ferramentas -->
     <div id="home-screen">
       <div class="hero-header">
-        <h1>PDF Tool</h1>
-        <p class="subtitle">Organize, combine, extraia, gire e converta seus PDFs de maneira simples e rápida.</p>
+        <div class="hero-header-top">
+          <div>
+            <h1>PDF Tool</h1>
+            <p class="subtitle">Organize, combine, extraia, gire e converta seus PDFs de maneira simples e rápida.</p>
+          </div>
+          <div class="theme-switch-wrap" id="home-theme-switch">
+            <button type="button" class="theme-btn" data-theme-mode="light" title="Modo Claro">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              <span>Claro</span>
+            </button>
+            <button type="button" class="theme-btn" data-theme-mode="dark" title="Modo Escuro">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <span>Escuro</span>
+            </button>
+            <button type="button" class="theme-btn active" data-theme-mode="auto" title="Automático (Sistema)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+              <span>Auto</span>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="grid" id="tool-grid"></div>
     </div>
@@ -28,10 +46,47 @@
           <span class="back-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
           <span>Voltar às ferramentas</span>
         </button>
+        <div class="theme-switch-wrap" id="workspace-theme-switch">
+          <button type="button" class="theme-btn" data-theme-mode="light" title="Modo Claro">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </button>
+          <button type="button" class="theme-btn" data-theme-mode="dark" title="Modo Escuro">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </button>
+          <button type="button" class="theme-btn active" data-theme-mode="auto" title="Automático (Sistema)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+          </button>
+        </div>
       </div>
       <div id="workspace-content"></div>
     </div>
   </main>
+
+  <!-- Modal Quick Look para Visualização Ampliada de Página -->
+  <div id="quick-look-overlay" class="quick-look-overlay hidden">
+    <div class="quick-look-window">
+      <div class="quick-look-header">
+        <div class="quick-look-title" id="quick-look-title">Página 1 de 1</div>
+        <button type="button" class="quick-look-close" id="quick-look-close" title="Fechar (Esc)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="quick-look-body">
+        <button type="button" class="quick-look-nav prev" id="quick-look-prev" title="Página Anterior (←)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="quick-look-canvas-container" id="quick-look-canvas-container">
+          <canvas id="quick-look-canvas"></canvas>
+        </div>
+        <button type="button" class="quick-look-nav next" id="quick-look-next" title="Próxima Página (→)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="quick-look-footer">
+        <span class="quick-look-hint">Dica: Use as setas <kbd>←</kbd> <kbd>→</kbd> do teclado para folhear • <kbd>Esc</kbd> ou <kbd>Espaço</kbd> para fechar</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Toast na frente com Overlay -->
   <div id="save-toast-overlay" class="save-toast-overlay hidden">

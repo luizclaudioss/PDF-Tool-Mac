@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Arquitetura-Universal%20(Apple%20Silicon%20%2B%20Intel)-blue?style=flat-square" alt="Universal Binary" />
   <img src="https://img.shields.io/badge/Tamanho-~2.5%20MB-success?style=flat-square" alt="Tamanho" />
   <img src="https://img.shields.io/badge/Privacidade-100%25%20Offline-green?style=flat-square" alt="Privacidade" />
-  <img src="https://img.shields.io/badge/Versão-1.1.0-orange?style=flat-square" alt="Versão" />
+  <img src="https://img.shields.io/badge/Versão-1.2.0-orange?style=flat-square" alt="Versão" />
 </p>
 
 ---
@@ -26,18 +26,20 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 * ⚡ **Ultra Leve e Rápido:** Binário Universal nativo ocupando menos de 3 MB.
 * 🔒 **Segurança Total:** Zero conexões externas, sem rastreamento e sem dependência de internet.
-* 🖥️ **Design Moderno:** Interface polida com grade de 9 utilitários, ícones vetoriais modernos e integração nativa com o macOS.
+* 🖥️ **Design Moderno:** Interface polida em grade de 10 utilitários (5×2 sem rolagem), ícones vetoriais modernos e integração nativa com o macOS.
+* 🌓 **Tema Flexível:** Suporte a Tema Claro, Escuro e Automático (sincronizado com o sistema operacional).
 * 📂 **Fluxo Sem Atrito:** Diálogo nativo *"Salvar Como..."* e atalho flutuante para abrir o arquivo ou visualizá-lo diretamente no Finder com um clique.
 
 ---
 
-## 🧰 Ferramentas Disponíveis (9 Utilitários)
+## 🧰 Ferramentas Disponíveis (10 Utilitários)
 
 | Ferramenta | Descrição |
 | :--- | :--- |
+| **Assinar PDF** | Assine documentos desenhando diretamente na tela com caligrafia suave ou importe uma foto/imagem da sua assinatura (com remoção inteligente de fundo branco). Posicione e redimensione interativamente sobre a página desejada. |
 | **Comprimir PDF** | Reduza o tamanho do PDF com 3 níveis de compressão (*Alta*, *Recomendada*, *Leve*), reamostragem inteligente de imagens e comparador de economia de tamanho em tempo real. |
 | **Proteger / Desproteger** | Criptografe documentos com senha via motor nativo de hardware Apple PDFKit, ou remova senhas permanentemente de arquivos desbloqueados. |
-| **Marca d'Água & Numeração** | Aplique marcas d'água personalizadas (*CONFIDENCIAL*, *COPIA*, etc.) com controle de ângulo e opacidade, além de numeração de páginas nos cantos ou centro com preview ao vivo. |
+| **Marca d'Água & Numeração** | Aplique marcas d'água personalizadas (*CONFIDENCIAL*, *COPIA*, etc.) com controle de cor, ângulo e opacidade, além de numeração de páginas nos cantos ou centro com preview ao vivo. |
 | **Combinar PDF** | Junte múltiplos PDFs em um só arquivo. Reordene arrastando cartões ou usando setas, com opção de rotação individual. |
 | **Extrair Páginas** | Selecione visualmente as páginas desejadas e crie um novo PDF apenas com elas. |
 | **Girar PDF** | Gire páginas individuais em 90°, 180° ou 270°, ou use os botões rápidos para girar todas de uma só vez. |
@@ -49,10 +51,13 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 ## 💡 Destaques de Usabilidade
 
+* 🔍 **Quick Look (Espaço ou Duplo Clique):** Inspecione qualquer página em alta resolução antes de dividir, girar ou excluir documentos. Use as setas (← / →) para navegar e `Esc` ou `Espaço` para fechar.
+* ✍️ **Assinatura Vetorial & Transparente:** Desenhe sua assinatura com ajuste de espessura de traço e cor, ou faça upload de um papel assinado — o app elimina automaticamente o fundo branco.
 * 🔓 **Desbloqueio de PDFs Protegidos:** Caixa de diálogo embutida para inserir a senha de documentos criptografados (comprovantes bancários, faturas, etc.) sem sair do programa.
 * 🛡️ **Criptografia Apple PDFKit:** Criptografe seus PDFs com algoritmos oficiais nativos do macOS, garantindo compatibilidade total com Adobe Acrobat e Visualizador do Mac.
 * 🚀 **Toast de Sucesso Inteligente:** Ao salvar, receba a confirmação com botões para **Abrir o Documento** ou **Revelar no Finder**, retornando à tela inicial automaticamente.
 * ⌨️ **Atalhos de Teclado Nativos:**
+  * <kbd>Espaço</kbd> ou Duplo Clique: Quick Look na página selecionada.
   * <kbd>⌘</kbd> + <kbd>O</kbd>: Selecionar / Importar arquivo.
   * <kbd>⌘</kbd> + <kbd>S</kbd>: Executar ação e salvar.
   * <kbd>⌘</kbd> + <kbd>W</kbd>: Voltar à lista de ferramentas.
@@ -64,7 +69,7 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 ### Opção 1: Baixar o Aplicativo Pronto (Recomendado)
 1. Acesse a aba de **[Releases](https://github.com/luirdi/PDF-Tool-Mac/releases)**.
-2. Baixe o arquivo `PDF-Tool-v1.1.0.zip`.
+2. Baixe o arquivo `PDF-Tool-v1.2.0.zip`.
 3. Dê dois cliques para descompactar.
 4. Arraste o **PDF Tool.app** para a sua pasta **Aplicativos** (`/Applications`).
 

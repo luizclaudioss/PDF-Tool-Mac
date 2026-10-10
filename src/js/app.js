@@ -24,7 +24,9 @@ const { PDFDocument, degrees } = PDFLib;
           chevronLeft: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
           chevronRight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
           close: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-          check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+          check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+          sign: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>`,
+          zoomIn: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`
         };
 
         const TOOLS = [
@@ -69,6 +71,12 @@ const { PDFDocument, degrees } = PDFLib;
             icon: SVG_ICONS.watermark,
             title: "Marca d'Água e Numeração",
             desc: "Adicione carimbo com texto personalizado ou numere as páginas do seu PDF.",
+          },
+          {
+            id: "sign",
+            icon: SVG_ICONS.sign,
+            title: "Assinar PDF",
+            desc: "Desenhe sua assinatura ou importe imagem e posicione no documento.",
           },
           {
             id: "pdf2jpg",
@@ -937,6 +945,23 @@ const { PDFDocument, degrees } = PDFLib;
               canvas.style.transform = `rotate(${state.rotations[p]}deg)`;
             });
             thumb.appendChild(rb);
+
+            // Quick Look button on every thumb
+            const ql = document.createElement("button");
+            ql.type = "button";
+            ql.className = "thumb-quicklook-btn";
+            ql.innerHTML = SVG_ICONS.zoomIn;
+            ql.title = "Visualização Rápida";
+            ql.addEventListener("click", (e) => {
+              e.stopPropagation();
+              window.openQuickLook(pdf, i);
+            });
+            thumb.appendChild(ql);
+
+            thumb.addEventListener("dblclick", (e) => {
+              e.stopPropagation();
+              window.openQuickLook(pdf, i);
+            });
 
             if (selectable) {
               const check = document.createElement("div");
@@ -2894,6 +2919,626 @@ const { PDFDocument, degrees } = PDFLib;
           container.appendChild(btn);
           container.appendChild(status);
         };
+
+        // ---------- ASSINAR PDF ----------
+        RENDERERS.sign = function (container) {
+          container.innerHTML = `
+            <h2><span class="workspace-title-icon">${SVG_ICONS.sign}</span> Assinar PDF</h2>
+            <p class="hint">Desenhe sua assinatura ou importe uma imagem e posicione-a interativamente na página do documento.</p>
+          `;
+
+          let fileBuffer = null;
+          let currentFile = null;
+          let pdfJsDoc = null;
+          let currentPageNum = 1;
+          let totalPages = 1;
+          let signatureDataUrl = null;
+
+          // Posição e proporção relativa na página (0.0 até 1.0)
+          let sigRelX = 0.55;
+          let sigRelY = 0.80;
+          let sigRelWidth = 0.32;
+          let sigRelHeight = 0.12;
+
+          let dropzoneEl = null;
+          const fileBarWrap = document.createElement("div");
+          fileBarWrap.className = "loaded-file-bar-wrap";
+
+          const mainLayout = document.createElement("div");
+          mainLayout.className = "sign-layout";
+          mainLayout.style.display = "none";
+
+          const controlsPanel = document.createElement("div");
+          controlsPanel.className = "sign-controls";
+          controlsPanel.innerHTML = `
+            <div class="tool-section-box" style="margin:0;">
+              <div class="sign-tabs-nav">
+                <button type="button" class="sign-tab-btn active" id="tab-draw">Desenhar Assinatura</button>
+                <button type="button" class="sign-tab-btn" id="tab-upload">Carregar Imagem</button>
+              </div>
+
+              <!-- Painel 1: Desenho -->
+              <div id="draw-panel">
+                <div class="sign-canvas-box">
+                  <canvas id="sig-pad-canvas" width="310" height="140"></canvas>
+                </div>
+                <div class="sign-toolbar">
+                  <div class="sign-color-picker">
+                    <span style="font-size:11.5px;color:var(--muted);font-weight:600;">Caneta:</span>
+                    <button type="button" class="sign-color-dot selected" data-color="#000000" style="background:#000000;" title="Preto"></button>
+                    <button type="button" class="sign-color-dot" data-color="#1e3a8a" style="background:#1e3a8a;" title="Azul Caneta"></button>
+                  </div>
+                  <button type="button" class="sign-btn-clear" id="btn-clear-sig">Limpar</button>
+                </div>
+              </div>
+
+              <!-- Painel 2: Upload -->
+              <div id="upload-panel" style="display:none;">
+                <label style="display:block;border:2px dashed var(--border);border-radius:var(--radius-sm);padding:22px 14px;text-align:center;cursor:pointer;background:var(--bg);">
+                  <input type="file" id="sig-file-input" accept="image/png, image/jpeg, image/webp" style="display:none;" />
+                  <span style="font-size:12px;font-weight:600;color:var(--ink);display:block;">Clique para escolher imagem</span>
+                  <span style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">PNG transparente ou foto de assinatura</span>
+                </label>
+                <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="sig-remove-white" checked style="accent-color:var(--green);cursor:pointer;" />
+                  <label for="sig-remove-white" style="font-size:12px;color:var(--ink-secondary);cursor:pointer;">Remover fundo branco da folha</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="tool-section-box" style="margin:0;">
+              <div class="tool-section-title" style="margin-bottom:8px;">Página & Ajustes</div>
+              <div class="form-field-group">
+                <label class="form-field-label">Página de Destino:</label>
+                <select id="sig-target-page" class="select-native" style="width:100%;"></select>
+              </div>
+              <div class="form-field-group" style="margin-top:8px;">
+                <label class="form-field-label">Tamanho da Assinatura:</label>
+                <input type="range" id="sig-scale-slider" min="50" max="220" value="100" style="width:100%;accent-color:var(--green);cursor:pointer;" />
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button type="button" class="chip-btn" id="btn-pos-bottom-right" style="flex:1;">Rodapé Direito</button>
+                <button type="button" class="chip-btn" id="btn-pos-bottom-center" style="flex:1;">Rodapé Centro</button>
+              </div>
+            </div>
+          `;
+
+          const previewPanel = document.createElement("div");
+          previewPanel.className = "sign-preview-panel";
+          previewPanel.innerHTML = `
+            <div class="sign-page-nav">
+              <button type="button" class="order-btn" id="sig-prev-page" title="Página Anterior">←</button>
+              <span id="sig-page-indicator">Página 1 de 1</span>
+              <button type="button" class="order-btn" id="sig-next-page" title="Próxima Página">→</button>
+            </div>
+            <div class="sign-page-container" id="sig-page-container">
+              <canvas id="sign-doc-canvas" class="sign-page-canvas"></canvas>
+              <div class="sig-overlay-badge" id="sig-overlay-badge" style="display:none;">
+                <img id="sig-overlay-img" src="" alt="Assinatura" />
+                <div class="sig-overlay-handle" id="sig-overlay-handle" title="Arraste para redimensionar"></div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin:4px 0 0;text-align:center;">
+              Arraste a caixa verde para posicionar a assinatura no local desejado.
+            </p>
+          `;
+
+          mainLayout.append(controlsPanel, previewPanel);
+
+          const btn = document.createElement("button");
+          btn.className = "action-btn";
+          btn.textContent = "Assinar e Baixar PDF";
+          btn.disabled = true;
+
+          const status = statusEl(container);
+
+          // Setup Canvas Desenho
+          const padCanvas = controlsPanel.querySelector("#sig-pad-canvas");
+          const padCtx = padCanvas.getContext("2d");
+          let isDrawing = false;
+          let penColor = "#000000";
+          let penWidth = 2.5;
+          let hasDrawn = false;
+
+          function clearPad() {
+            padCtx.clearRect(0, 0, padCanvas.width, padCanvas.height);
+            hasDrawn = false;
+            updateSigFromPad();
+          }
+
+          function getPadPos(e) {
+            const rect = padCanvas.getBoundingClientRect();
+            const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0]?.clientX);
+            const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0]?.clientY);
+            return {
+              x: (clientX - rect.left) * (padCanvas.width / rect.width),
+              y: (clientY - rect.top) * (padCanvas.height / rect.height),
+            };
+          }
+
+          function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getPadPos(e);
+            padCtx.beginPath();
+            padCtx.moveTo(pos.x, pos.y);
+            padCtx.strokeStyle = penColor;
+            padCtx.lineWidth = penWidth;
+            padCtx.lineCap = "round";
+            padCtx.lineJoin = "round";
+          }
+
+          function drawStroke(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getPadPos(e);
+            padCtx.lineTo(pos.x, pos.y);
+            padCtx.stroke();
+            hasDrawn = true;
+          }
+
+          function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            padCtx.closePath();
+            if (hasDrawn) {
+              updateSigFromPad();
+            }
+          }
+
+          padCanvas.addEventListener("mousedown", startDrawing);
+          padCanvas.addEventListener("mousemove", drawStroke);
+          window.addEventListener("mouseup", stopDrawing);
+          padCanvas.addEventListener("touchstart", startDrawing, { passive: false });
+          padCanvas.addEventListener("touchmove", drawStroke, { passive: false });
+          padCanvas.addEventListener("touchend", stopDrawing);
+
+          function updateSigFromPad() {
+            if (!hasDrawn) {
+              signatureDataUrl = null;
+              overlayBadge.style.display = "none";
+              btn.disabled = true;
+              return;
+            }
+            signatureDataUrl = padCanvas.toDataURL("image/png");
+            overlayImg.src = signatureDataUrl;
+            overlayBadge.style.display = "flex";
+            btn.disabled = false;
+          }
+
+          controlsPanel.querySelector("#btn-clear-sig").onclick = clearPad;
+
+          controlsPanel.querySelectorAll(".sign-color-dot").forEach((dot) => {
+            dot.onclick = () => {
+              controlsPanel.querySelectorAll(".sign-color-dot").forEach((d) => d.classList.remove("selected"));
+              dot.classList.add("selected");
+              penColor = dot.dataset.color;
+            };
+          });
+
+          // Tabs
+          const tabDraw = controlsPanel.querySelector("#tab-draw");
+          const tabUpload = controlsPanel.querySelector("#tab-upload");
+          const drawPanel = controlsPanel.querySelector("#draw-panel");
+          const uploadPanel = controlsPanel.querySelector("#upload-panel");
+
+          tabDraw.onclick = () => {
+            tabDraw.classList.add("active");
+            tabUpload.classList.remove("active");
+            drawPanel.style.display = "block";
+            uploadPanel.style.display = "none";
+            if (hasDrawn) updateSigFromPad();
+          };
+
+          tabUpload.onclick = () => {
+            tabUpload.classList.add("active");
+            tabDraw.classList.remove("active");
+            uploadPanel.style.display = "block";
+            drawPanel.style.display = "none";
+          };
+
+          // Upload de imagem
+          const fileInput = controlsPanel.querySelector("#sig-file-input");
+          const removeWhiteCheck = controlsPanel.querySelector("#sig-remove-white");
+
+          fileInput.onchange = () => {
+            if (!fileInput.files || !fileInput.files[0]) return;
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => {
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tCtx = tempCanvas.getContext("2d");
+                tCtx.drawImage(img, 0, 0);
+
+                if (removeWhiteCheck.checked) {
+                  const imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                  const d = imgData.data;
+                  for (let i = 0; i < d.length; i += 4) {
+                    const r = d[i], g = d[i + 1], b = d[i + 2];
+                    if (r > 220 && g > 220 && b > 220) {
+                      d[i + 3] = 0;
+                    }
+                  }
+                  tCtx.putImageData(imgData, 0, 0);
+                }
+
+                signatureDataUrl = tempCanvas.toDataURL("image/png");
+                overlayImg.src = signatureDataUrl;
+                overlayBadge.style.display = "flex";
+                btn.disabled = false;
+              };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+
+          // Overlay badge e movimentação
+          const overlayBadge = previewPanel.querySelector("#sig-overlay-badge");
+          const overlayImg = previewPanel.querySelector("#sig-overlay-img");
+          const overlayHandle = previewPanel.querySelector("#sig-overlay-handle");
+          const docCanvas = previewPanel.querySelector("#sign-doc-canvas");
+
+          let isDragging = false;
+          let isResizing = false;
+          let dragStartX = 0;
+          let dragStartY = 0;
+          let initialBadgeLeft = 0;
+          let initialBadgeTop = 0;
+          let initialBadgeWidth = 0;
+          let initialBadgeHeight = 0;
+
+          function positionBadge() {
+            if (!docCanvas.width) return;
+            const cWidth = docCanvas.clientWidth || 400;
+            const cHeight = docCanvas.clientHeight || 550;
+            const bWidth = sigRelWidth * cWidth;
+            const bHeight = sigRelHeight * cHeight;
+            const bLeft = sigRelX * cWidth;
+            const bTop = sigRelY * cHeight;
+
+            overlayBadge.style.width = `${bWidth}px`;
+            overlayBadge.style.height = `${bHeight}px`;
+            overlayBadge.style.left = `${bLeft}px`;
+            overlayBadge.style.top = `${bTop}px`;
+          }
+
+          overlayBadge.addEventListener("mousedown", (e) => {
+            if (e.target === overlayHandle) return;
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialBadgeLeft = parseFloat(overlayBadge.style.left) || 0;
+            initialBadgeTop = parseFloat(overlayBadge.style.top) || 0;
+            e.preventDefault();
+          });
+
+          overlayHandle.addEventListener("mousedown", (e) => {
+            isResizing = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialBadgeWidth = overlayBadge.clientWidth;
+            initialBadgeHeight = overlayBadge.clientHeight;
+            e.preventDefault();
+            e.stopPropagation();
+          });
+
+          window.addEventListener("mousemove", (e) => {
+            const cWidth = docCanvas.clientWidth || 400;
+            const cHeight = docCanvas.clientHeight || 550;
+            if (isDragging) {
+              const dx = e.clientX - dragStartX;
+              const dy = e.clientY - dragStartY;
+              let newLeft = Math.max(0, Math.min(cWidth - overlayBadge.clientWidth, initialBadgeLeft + dx));
+              let newTop = Math.max(0, Math.min(cHeight - overlayBadge.clientHeight, initialBadgeTop + dy));
+              overlayBadge.style.left = `${newLeft}px`;
+              overlayBadge.style.top = `${newTop}px`;
+              sigRelX = newLeft / cWidth;
+              sigRelY = newTop / cHeight;
+            } else if (isResizing) {
+              const dx = e.clientX - dragStartX;
+              const newW = Math.max(50, Math.min(cWidth - parseFloat(overlayBadge.style.left), initialBadgeWidth + dx));
+              const aspect = initialBadgeHeight / initialBadgeWidth || 0.4;
+              const newH = newW * aspect;
+              overlayBadge.style.width = `${newW}px`;
+              overlayBadge.style.height = `${newH}px`;
+              sigRelWidth = newW / cWidth;
+              sigRelHeight = newH / cHeight;
+            }
+          });
+
+          window.addEventListener("mouseup", () => {
+            isDragging = false;
+            isResizing = false;
+          });
+
+          // Slider de escala
+          const scaleSlider = controlsPanel.querySelector("#sig-scale-slider");
+          scaleSlider.addEventListener("input", () => {
+            const scale = parseFloat(scaleSlider.value) / 100;
+            sigRelWidth = 0.32 * scale;
+            sigRelHeight = 0.12 * scale;
+            positionBadge();
+          });
+
+          // Presets de posição
+          controlsPanel.querySelector("#btn-pos-bottom-right").onclick = () => {
+            sigRelX = 0.58;
+            sigRelY = 0.82;
+            positionBadge();
+          };
+
+          controlsPanel.querySelector("#btn-pos-bottom-center").onclick = () => {
+            sigRelX = 0.34;
+            sigRelY = 0.82;
+            positionBadge();
+          };
+
+          async function renderCurrentDocumentPage() {
+            if (!pdfJsDoc) return;
+            const page = await pdfJsDoc.getPage(currentPageNum);
+            const vp = page.getViewport({ scale: 0.8 });
+            docCanvas.width = vp.width;
+            docCanvas.height = vp.height;
+            const ctx = docCanvas.getContext("2d");
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            previewPanel.querySelector("#sig-page-indicator").textContent = `Página ${currentPageNum} de ${totalPages}`;
+            previewPanel.querySelector("#sig-prev-page").disabled = currentPageNum <= 1;
+            previewPanel.querySelector("#sig-next-page").disabled = currentPageNum >= totalPages;
+            controlsPanel.querySelector("#sig-target-page").value = currentPageNum;
+            positionBadge();
+          }
+
+          previewPanel.querySelector("#sig-prev-page").onclick = () => {
+            if (currentPageNum > 1) {
+              currentPageNum--;
+              renderCurrentDocumentPage();
+            }
+          };
+
+          previewPanel.querySelector("#sig-next-page").onclick = () => {
+            if (currentPageNum < totalPages) {
+              currentPageNum++;
+              renderCurrentDocumentPage();
+            }
+          };
+
+          const targetPageSelect = controlsPanel.querySelector("#sig-target-page");
+          targetPageSelect.onchange = () => {
+            currentPageNum = parseInt(targetPageSelect.value);
+            renderCurrentDocumentPage();
+          };
+
+          function clearActiveFile() {
+            fileBuffer = null;
+            currentFile = null;
+            pdfJsDoc = null;
+            fileBarWrap.innerHTML = "";
+            mainLayout.style.display = "none";
+            if (dropzoneEl) dropzoneEl.style.display = "flex";
+            btn.disabled = true;
+            setStatus(status, "Arquivo fechado. Selecione ou arraste um novo PDF.", "");
+          }
+
+          function renderLoadedBar(name, total) {
+            fileBarWrap.innerHTML = `
+              <div class="loaded-file-bar">
+                <div class="loaded-file-info">
+                  <span class="loaded-file-icon">${SVG_ICONS.file}</span>
+                  <span class="loaded-file-name" title="${name}">${name}</span>
+                  <span class="loaded-file-pages">(${total} pág.)</span>
+                </div>
+                <button type="button" class="btn-clear-file" title="Fechar este arquivo">
+                  ${SVG_ICONS.close} Fechar arquivo
+                </button>
+              </div>
+            `;
+            const clearBtn = fileBarWrap.querySelector(".btn-clear-file");
+            if (clearBtn) clearBtn.addEventListener("click", () => clearActiveFile());
+          }
+
+          dropzoneEl = makeDropzone(
+            container,
+            { label: "o PDF" },
+            async (newFiles) => {
+              if (!newFiles[0]) return;
+              const unlocked = await ensurePdfFileUnlocked(newFiles[0], status);
+              if (!unlocked) return;
+              currentFile = unlocked.file;
+              fileBuffer = unlocked.buffer;
+              setStatus(status, "Carregando páginas...", "");
+
+              try {
+                pdfJsDoc = await pdfjsLib.getDocument({ data: fileBuffer.slice(0) }).promise;
+                totalPages = pdfJsDoc.numPages;
+                currentPageNum = 1;
+
+                targetPageSelect.innerHTML = "";
+                for (let i = 1; i <= totalPages; i++) {
+                  const opt = document.createElement("option");
+                  opt.value = i;
+                  opt.textContent = `Página ${i} de ${totalPages}`;
+                  targetPageSelect.appendChild(opt);
+                }
+
+                if (dropzoneEl) dropzoneEl.style.display = "none";
+                renderLoadedBar(currentFile.name, totalPages);
+                mainLayout.style.display = "grid";
+                await renderCurrentDocumentPage();
+                setStatus(status, "");
+              } catch (err) {
+                setStatus(status, "Erro: " + err.message, "error");
+              }
+            }
+          );
+
+          btn.addEventListener("click", async () => {
+            if (!fileBuffer || !currentFile || !signatureDataUrl) return;
+            btn.disabled = true;
+            setStatus(status, "Incorporando assinatura no documento...", "");
+
+            try {
+              const doc = await PDFDocument.load(fileBuffer.slice(0), { ignoreEncryption: true });
+              const sigImageBytes = await fetch(signatureDataUrl).then((r) => r.arrayBuffer());
+              const embeddedSig = await doc.embedPng(sigImageBytes);
+
+              const targetPageIdx = currentPageNum - 1;
+              const page = doc.getPage(targetPageIdx);
+              const { width, height } = page.getSize();
+
+              const pdfWidth = sigRelWidth * width;
+              const pdfHeight = sigRelHeight * height;
+              const pdfX = sigRelX * width;
+              // No sistema de coordenadas do PDF, Y = 0 fica na borda inferior
+              const pdfY = height - (sigRelY * height) - pdfHeight;
+
+              page.drawImage(embeddedSig, {
+                x: pdfX,
+                y: pdfY,
+                width: pdfWidth,
+                height: pdfHeight,
+              });
+
+              const outBytes = await doc.save();
+              const blob = new Blob([outBytes], { type: "application/pdf" });
+              prepareSaveAction(status, btn);
+              const outName = `${getBaseFilename(currentFile.name)}_assinado.pdf`;
+              await triggerDownload(blob, outName);
+            } catch (err) {
+              setStatus(status, "Erro ao assinar documento: " + err.message, "error");
+              btn.disabled = false;
+            }
+          });
+
+          container.appendChild(fileBarWrap);
+          container.appendChild(mainLayout);
+          container.appendChild(btn);
+          container.appendChild(status);
+        };
+
+        // ---------- GERENCIADOR DE TEMA (CLARO / ESCURO / AUTO) ----------
+        function initThemeSwitcher() {
+          const saved = localStorage.getItem("pdf_tool_theme") || "auto";
+          setTheme(saved);
+          document.querySelectorAll(".theme-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              setTheme(btn.dataset.themeMode);
+            });
+          });
+        }
+
+        function setTheme(mode) {
+          localStorage.setItem("pdf_tool_theme", mode);
+          if (mode === "auto") {
+            document.documentElement.removeAttribute("data-theme");
+          } else {
+            document.documentElement.setAttribute("data-theme", mode);
+          }
+          document.querySelectorAll(".theme-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.themeMode === mode);
+          });
+        }
+
+        // ---------- QUICK LOOK MODAL (ZOOM AMPLIADO) ----------
+        let quickLookDoc = null;
+        let quickLookCurrentPage = 1;
+        let quickLookTotalPages = 1;
+
+        window.openQuickLook = async function(pdfDocOrBuffer, startPage = 1) {
+          try {
+            let pdf = null;
+            if (pdfDocOrBuffer && typeof pdfDocOrBuffer.getPage === "function") {
+              pdf = pdfDocOrBuffer;
+            } else if (pdfDocOrBuffer) {
+              pdf = await pdfjsLib.getDocument({ data: pdfDocOrBuffer.slice(0) }).promise;
+            }
+            if (!pdf) return;
+            quickLookDoc = pdf;
+            quickLookTotalPages = pdf.numPages;
+            quickLookCurrentPage = Math.max(1, Math.min(startPage, quickLookTotalPages));
+            const overlay = document.getElementById("quick-look-overlay");
+            if (overlay) overlay.classList.remove("hidden");
+            await renderQuickLookPage(quickLookCurrentPage);
+          } catch (err) {
+            console.warn("Erro ao abrir Quick Look:", err);
+          }
+        };
+
+        async function renderQuickLookPage(pageNum) {
+          if (!quickLookDoc) return;
+          quickLookCurrentPage = pageNum;
+          const title = document.getElementById("quick-look-title");
+          const prevBtn = document.getElementById("quick-look-prev");
+          const nextBtn = document.getElementById("quick-look-next");
+          const canvas = document.getElementById("quick-look-canvas");
+
+          if (title) title.textContent = `Página ${pageNum} de ${quickLookTotalPages}`;
+          if (prevBtn) prevBtn.disabled = pageNum <= 1;
+          if (nextBtn) nextBtn.disabled = pageNum >= quickLookTotalPages;
+
+          try {
+            const page = await quickLookDoc.getPage(pageNum);
+            const vp = page.getViewport({ scale: 1.6 });
+            canvas.width = vp.width;
+            canvas.height = vp.height;
+            const ctx = canvas.getContext("2d");
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+          } catch (err) {
+            console.warn("Erro renderizando página no Quick Look:", err);
+          }
+        }
+
+        function closeQuickLook() {
+          const overlay = document.getElementById("quick-look-overlay");
+          if (overlay) overlay.classList.add("hidden");
+          quickLookDoc = null;
+        }
+
+        function initQuickLookEvents() {
+          const overlay = document.getElementById("quick-look-overlay");
+          const closeBtn = document.getElementById("quick-look-close");
+          const prevBtn = document.getElementById("quick-look-prev");
+          const nextBtn = document.getElementById("quick-look-next");
+
+          if (closeBtn) closeBtn.onclick = closeQuickLook;
+          if (overlay) {
+            overlay.onclick = (e) => {
+              if (e.target === overlay) closeQuickLook();
+            };
+          }
+          if (prevBtn) {
+            prevBtn.onclick = () => {
+              if (quickLookCurrentPage > 1) renderQuickLookPage(quickLookCurrentPage - 1);
+            };
+          }
+          if (nextBtn) {
+            nextBtn.onclick = () => {
+              if (quickLookCurrentPage < quickLookTotalPages) renderQuickLookPage(quickLookCurrentPage + 1);
+            };
+          }
+
+          document.addEventListener("keydown", (e) => {
+            if (overlay && !overlay.classList.contains("hidden")) {
+              if (e.key === "Escape" || e.code === "Space") {
+                e.preventDefault();
+                closeQuickLook();
+              } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                if (quickLookCurrentPage > 1) renderQuickLookPage(quickLookCurrentPage - 1);
+              } else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                if (quickLookCurrentPage < quickLookTotalPages) renderQuickLookPage(quickLookCurrentPage + 1);
+              }
+            }
+          });
+        }
+
+        // Inicializar componentes globais
+        initThemeSwitcher();
+        initQuickLookEvents();
 // Prevenir comportamento padrão do navegador ao arrastar arquivos na janela
 window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => e.preventDefault());
