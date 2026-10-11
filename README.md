@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/macOS-11.0%2B%20(Big%20Sur%20ou%20superior)-black?style=flat-square&logo=apple&logoColor=white" alt="macOS Version" />
   <img src="https://img.shields.io/badge/Arquitetura-Universal%20(Apple%20Silicon%20%2B%20Intel)-blue?style=flat-square" alt="Universal Binary" />  <img src="https://img.shields.io/badge/Tamanho-~2.8%20MB-success?style=flat-square" alt="Tamanho" />
   <img src="https://img.shields.io/badge/Privacidade-100%25%20Offline-green?style=flat-square" alt="Privacidade" />
-  <img src="https://img.shields.io/badge/Versão-2.0.0-orange?style=flat-square" alt="Versão" />
+  <img src="https://img.shields.io/badge/Versão-2.0.1-orange?style=flat-square" alt="Versão" />
 </p>
 
 ---
@@ -75,7 +75,7 @@ Seus extratos bancários, contratos, faturas e documentos pessoais nunca saem do
 
 ### Opção 1: Baixar o Aplicativo Pronto (Recomendado)
 1. Acesse a aba de **[Releases](https://github.com/luirdi/PDF-Tool-Mac/releases)**.
-2. Baixe o arquivo `PDF-Tool-v2.0.0.zip`.
+2. Baixe o arquivo `PDF-Tool-v2.0.1.zip`.
 3. Dê dois cliques para descompactar.
 4. Arraste o **PDF Tool.app** para a sua pasta **Aplicativos** (`/Applications`).
 
